@@ -1,0 +1,827 @@
+import { useMemo, useState } from "react";
+import { Link, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  BadgeCheck,
+  Copy,
+  FileText,
+  Loader2,
+  Mail,
+  Pencil,
+  Plus,
+  Printer,
+  Search,
+  Send,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
+import { writeDraft } from "../ai";
+import {
+  addDays,
+  customerName,
+  daysBetween,
+  deductStock,
+  displayStatus,
+  invoiceTotals,
+  nextNumber,
+  quoteToInvoice,
+  returnStock,
+  receivables,
+  todayIso,
+} from "../finance";
+import { newId, toCsv, useWorkspace } from "../store";
+import { useBase } from "../base";
+import type { Customer, DisplayStatus, Invoice, InvoiceKind, LineItem } from "../types";
+import {
+  ConfirmDelete,
+  DemoNotice,
+  EmptyState,
+  Money,
+  PageHeader,
+  Panel,
+  StatusPill,
+  btnGhost,
+  btnPrimary,
+  download,
+  fieldClass,
+  formatDate,
+  formatMoney,
+  iconBtn,
+  labelClass,
+  linkClass,
+} from "../components";
+
+const kindLabel = (k: InvoiceKind) => (k === "invoice" ? "Invoice" : "Quote");
+
+/* ------------------------------------------------------------------ list */
+
+function InvoiceList() {
+  const { state } = useWorkspace();
+  const [params, setParams] = useSearchParams();
+  const kind = (params.get("kind") as InvoiceKind | "all" | null) ?? "all";
+  const [status, setStatus] = useState<DisplayStatus | "all">("all");
+  const [query, setQuery] = useState("");
+  const today = todayIso();
+  const cur = state.profile.currency;
+  const rec = receivables(state.invoices, today);
+
+  const rows = useMemo(() => {
+    const q = query.toLowerCase().trim();
+    return state.invoices
+      .filter((i) => kind === "all" || i.kind === kind)
+      .filter((i) => status === "all" || displayStatus(i, today) === status)
+      .filter((i) => !q || `${i.number} ${customerName(state.customers, i.customerId)}`.toLowerCase().includes(q))
+      .sort((a, b) => (a.issueDate < b.issueDate ? 1 : a.issueDate > b.issueDate ? -1 : b.number.localeCompare(a.number)));
+  }, [state.invoices, state.customers, kind, status, query, today]);
+
+  const exportCsv = () =>
+    download(
+      "invoices.csv",
+      toCsv(
+        ["Type", "Number", "Customer", "Issue date", "Due date", "Net", "Tax", "Total", "Currency", "Status", "Paid on"],
+        rows.map((i) => {
+          const t = invoiceTotals(i);
+          return [i.kind, i.number, customerName(state.customers, i.customerId), i.issueDate, i.dueDate, t.subtotal, t.tax, t.total, cur, displayStatus(i, today), i.paidAt ?? ""];
+        }),
+      ),
+      "text/csv",
+    );
+
+  return (
+    <div className="max-w-6xl">
+      <PageHeader
+        eyebrow="Sales"
+        title="Invoices & quotes"
+        description="Write quotes, turn accepted quotes into invoices, send them by email or print, and see at a glance who still owes you money."
+        actions={
+          <>
+            <button type="button" className={btnGhost} onClick={exportCsv} disabled={!rows.length}>
+              Export CSV
+            </button>
+            <Link to="new?kind=quote" className={btnGhost}>
+              <Plus size={16} aria-hidden="true" /> New quote
+            </Link>
+            <Link to="new?kind=invoice" className={btnPrimary}>
+              <Plus size={16} aria-hidden="true" /> New invoice
+            </Link>
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-border border border-border rounded-lg overflow-hidden mb-6">
+        {[
+          { label: "Awaiting payment", value: rec.openAmount, sub: `${rec.openCount} invoice(s)`, tone: "" },
+          { label: "Overdue", value: rec.overdueAmount, sub: `${rec.overdueCount} invoice(s)`, tone: rec.overdueCount ? "text-destructive" : "" },
+          {
+            label: "Open quotes",
+            value: state.invoices.filter((i) => i.kind === "quote" && i.status === "sent").reduce((s, i) => s + invoiceTotals(i).total, 0),
+            sub: `${state.invoices.filter((i) => i.kind === "quote" && i.status === "sent").length} awaiting reply`,
+            tone: "",
+          },
+        ].map((k) => (
+          <div key={k.label} className="bg-card p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">{k.label}</p>
+            <p className={`mt-1 text-2xl font-semibold ${k.tone}`}>
+              <Money value={k.value} currency={cur} />
+            </p>
+            <p className="text-xs text-muted-foreground">{k.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center mb-4">
+        <div role="tablist" aria-label="Document type" className="inline-flex rounded-md border border-border bg-card p-1 self-start">
+          {(["all", "invoice", "quote"] as const).map((k) => (
+            <button
+              key={k}
+              role="tab"
+              type="button"
+              aria-selected={kind === k}
+              onClick={() => setParams(k === "all" ? {} : { kind: k })}
+              className={`px-3 py-1.5 text-sm rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${kind === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {k === "all" ? "All" : `${kindLabel(k)}s`}
+            </button>
+          ))}
+        </div>
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <input aria-label="Search by number or customer" className={`${fieldClass} pl-9`} placeholder="Search number or customer…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        </div>
+        <select aria-label="Filter by status" className={`${fieldClass} lg:w-44`} value={status} onChange={(e) => setStatus(e.target.value as DisplayStatus | "all")}>
+          <option value="all">Any status</option>
+          {(["draft", "sent", "overdue", "paid", "accepted", "declined"] as const).map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {state.invoices.length === 0 ? (
+        <EmptyState title="No invoices or quotes yet">
+          <p>Create your first one, or load the example data from the dashboard.</p>
+          <Link to="new?kind=invoice" className={btnPrimary}>
+            <Plus size={16} aria-hidden="true" /> New invoice
+          </Link>
+        </EmptyState>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
+              <tr>
+                <th className="px-4 py-3 font-medium">Number</th>
+                <th className="px-4 py-3 font-medium">Customer</th>
+                <th className="px-4 py-3 font-medium hidden md:table-cell">Issued</th>
+                <th className="px-4 py-3 font-medium hidden md:table-cell">Due / valid until</th>
+                <th className="px-4 py-3 font-medium text-right">Total</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((i) => {
+                const st = displayStatus(i, today);
+                return (
+                  <tr key={i.id} className="border-b border-border last:border-0 hover:bg-secondary/60">
+                    <td className="px-4 py-3">
+                      <Link to={i.id} className={`font-mono font-medium ${linkClass} no-underline hover:underline`}>
+                        {i.number}
+                      </Link>
+                      <span className="block text-[11px] text-muted-foreground">{kindLabel(i.kind)}</span>
+                    </td>
+                    <td className="px-4 py-3 max-w-[16rem] truncate">{customerName(state.customers, i.customerId)}</td>
+                    <td className="px-4 py-3 hidden md:table-cell whitespace-nowrap">{formatDate(i.issueDate)}</td>
+                    <td className="px-4 py-3 hidden md:table-cell whitespace-nowrap">
+                      {formatDate(i.dueDate)}
+                      {st === "overdue" && <span className="block text-[11px] text-destructive">{daysBetween(i.dueDate, today)} days late</span>}
+                    </td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <Money value={invoiceTotals(i).total} currency={state.profile.currency} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusPill status={st} />
+                    </td>
+                  </tr>
+                );
+              })}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                    Nothing matches these filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- editor */
+
+function QuickCustomer({ onCreate, onCancel }: { onCreate: (c: Customer) => void; onCancel: () => void }) {
+  const [c, setC] = useState({ name: "", company: "", email: "", phone: "", address: "" });
+  return (
+    <div className="mt-3 rounded-md border border-border bg-secondary/50 p-3 grid gap-2 sm:grid-cols-2">
+      <label className={labelClass}>
+        Contact name
+        <input id="qc-name" className={fieldClass} value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} />
+      </label>
+      <label className={labelClass}>
+        Company (optional)
+        <input id="qc-company" className={fieldClass} value={c.company} onChange={(e) => setC({ ...c, company: e.target.value })} />
+      </label>
+      <label className={labelClass}>
+        Email
+        <input id="qc-email" type="email" className={fieldClass} value={c.email} onChange={(e) => setC({ ...c, email: e.target.value })} />
+      </label>
+      <label className={labelClass}>
+        Address
+        <input id="qc-address" className={fieldClass} value={c.address} onChange={(e) => setC({ ...c, address: e.target.value })} />
+      </label>
+      <div className="sm:col-span-2 flex gap-2">
+        <button
+          type="button"
+          className={btnPrimary}
+          disabled={!c.name.trim() && !c.company.trim()}
+          onClick={() => onCreate({ ...c, id: newId(), notes: "", createdAt: new Date().toISOString() })}
+        >
+          Add customer
+        </button>
+        <button type="button" className={btnGhost} onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function InvoiceEditor() {
+  const { id } = useParams();
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const { state, upsert, update } = useWorkspace();
+  const base = useBase();
+  const existing = state.invoices.find((i) => i.id === id);
+  const today = todayIso();
+
+  const [draft, setDraft] = useState<Invoice>(() => {
+    if (existing) return existing;
+    const kind = (params.get("kind") as InvoiceKind) || "invoice";
+    return {
+      id: newId(),
+      kind,
+      number: nextNumber(state.invoices, kind, state.profile, today),
+      customerId: params.get("customer") ?? "",
+      issueDate: today,
+      dueDate: addDays(today, kind === "invoice" ? state.profile.paymentTermsDays || 14 : 30),
+      items: [{ id: newId(), description: "", quantity: 1, unitPrice: 0 }],
+      taxRate: state.profile.defaultTaxRate,
+      notes: "",
+      status: "draft",
+      createdAt: new Date().toISOString(),
+    };
+  });
+  const [addingCustomer, setAddingCustomer] = useState(false);
+
+  const totals = invoiceTotals(draft);
+  const cur = state.profile.currency;
+  const setItem = (itemId: string, patch: Partial<LineItem>) =>
+    setDraft((d) => ({ ...d, items: d.items.map((it) => (it.id === itemId ? { ...it, ...patch } : it)) }));
+
+  const valid = draft.customerId && draft.items.some((i) => i.description.trim()) && draft.number.trim();
+
+  function save(markSent: boolean) {
+    if (!valid) {
+      toast.error("Choose a customer and add at least one line with a description.");
+      return;
+    }
+    let cleaned: Invoice = { ...draft, items: draft.items.filter((i) => i.description.trim()) };
+    if (markSent) cleaned = { ...cleaned, status: "sent" };
+    // Keep stock in line with what was actually invoiced: give back what an earlier version
+    // booked out, then book out the current lines if the invoice has gone out.
+    if (cleaned.kind === "invoice") {
+      let stock = existing?.stockDeducted ? returnStock(state.stock, existing) : state.stock;
+      const outgoing = cleaned.status === "sent" || cleaned.status === "paid";
+      const booked = outgoing ? deductStock(stock, cleaned) : stock;
+      cleaned.stockDeducted = outgoing && booked !== stock;
+      stock = booked;
+      if (stock !== state.stock) update({ stock });
+    }
+    upsert("invoices", cleaned);
+    toast.success(`${kindLabel(draft.kind)} ${draft.number} saved`);
+    navigate(`${base}/invoices/${draft.id}`);
+  }
+
+  return (
+    <div className="max-w-5xl">
+      <Link to={existing ? `${base}/invoices/${existing.id}` : `${base}/invoices`} className={`inline-flex items-center gap-1 text-sm mb-4 ${linkClass} no-underline`}>
+        <ArrowLeft size={16} aria-hidden="true" /> Back
+      </Link>
+      <PageHeader eyebrow={kindLabel(draft.kind)} title={existing ? `Edit ${draft.number}` : `New ${draft.kind}`} />
+
+      <form
+        className="flex flex-col gap-6"
+        onSubmit={(e) => {
+          e.preventDefault();
+          save(false);
+        }}
+      >
+        <Panel className="grid gap-4 md:grid-cols-4">
+          <div className="md:col-span-2">
+            <label className={labelClass} htmlFor="inv-customer">
+              Customer
+            </label>
+            <div className="mt-1 flex gap-2">
+              <select id="inv-customer" className={fieldClass} value={draft.customerId} onChange={(e) => setDraft({ ...draft, customerId: e.target.value })}>
+                <option value="">Choose a customer…</option>
+                {state.customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.company ? `${c.company} — ${c.name}` : c.name}
+                  </option>
+                ))}
+              </select>
+              <button type="button" className={btnGhost} onClick={() => setAddingCustomer((v) => !v)} aria-expanded={addingCustomer}>
+                <Plus size={16} aria-hidden="true" /> New
+              </button>
+            </div>
+            {addingCustomer && (
+              <QuickCustomer
+                onCancel={() => setAddingCustomer(false)}
+                onCreate={(c) => {
+                  upsert("customers", c);
+                  setDraft((d) => ({ ...d, customerId: c.id }));
+                  setAddingCustomer(false);
+                }}
+              />
+            )}
+          </div>
+          <label className={labelClass}>
+            Number
+            <input id="inv-number" className={`${fieldClass} font-mono`} value={draft.number} onChange={(e) => setDraft({ ...draft, number: e.target.value })} />
+          </label>
+          <label className={labelClass}>
+            Tax rate (%)
+            <input
+              id="inv-tax"
+              type="number"
+              min={0}
+              step="0.1"
+              className={`${fieldClass} font-mono`}
+              value={draft.taxRate}
+              onChange={(e) => setDraft({ ...draft, taxRate: Number(e.target.value) })}
+            />
+          </label>
+          <label className={labelClass}>
+            Issue date
+            <input
+              id="inv-issue"
+              type="date"
+              className={fieldClass}
+              value={draft.issueDate}
+              onChange={(e) =>
+                setDraft({
+                  ...draft,
+                  issueDate: e.target.value,
+                  dueDate: addDays(e.target.value, draft.kind === "invoice" ? state.profile.paymentTermsDays || 14 : 30),
+                })
+              }
+            />
+          </label>
+          <label className={labelClass}>
+            {draft.kind === "invoice" ? "Payment due" : "Valid until"}
+            <input id="inv-due" type="date" className={fieldClass} value={draft.dueDate} onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })} />
+          </label>
+        </Panel>
+
+        <Panel>
+          <h2 className="font-heading text-lg font-semibold mb-3">Lines</h2>
+          <div className="flex flex-col gap-3">
+            <div className="hidden md:grid md:grid-cols-[1fr_90px_130px_120px_40px] gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+              <span>Description</span>
+              <span>Qty</span>
+              <span>Unit price</span>
+              <span className="text-right">Amount</span>
+              <span />
+            </div>
+            {draft.items.map((it, idx) => (
+              <div key={it.id} className="grid grid-cols-2 md:grid-cols-[1fr_90px_130px_120px_40px] gap-2 items-center border-b border-border pb-3 md:border-0 md:pb-0">
+                <div className="col-span-2 md:col-span-1 flex flex-col gap-1">
+                  <input
+                    id={`line-desc-${idx}`}
+                    aria-label={`Line ${idx + 1} description`}
+                    className={fieldClass}
+                    placeholder="What was delivered or done"
+                    value={it.description}
+                    list="stock-names"
+                    onChange={(e) => {
+                      const product = state.stock.find((s) => s.name === e.target.value);
+                      setItem(it.id, {
+                        description: e.target.value,
+                        productId: product?.id,
+                        ...(product && product.salePrice ? { unitPrice: product.salePrice } : {}),
+                      });
+                    }}
+                  />
+                  {it.productId && <span className="text-[11px] text-ll-success">Linked to stock — booked out when sent</span>}
+                </div>
+                <input
+                  aria-label={`Line ${idx + 1} quantity`}
+                  type="number"
+                  step="any"
+                  min={0}
+                  className={`${fieldClass} font-mono`}
+                  value={it.quantity}
+                  onChange={(e) => setItem(it.id, { quantity: Number(e.target.value) })}
+                />
+                <input
+                  aria-label={`Line ${idx + 1} unit price`}
+                  type="number"
+                  step="0.01"
+                  className={`${fieldClass} font-mono`}
+                  value={it.unitPrice}
+                  onChange={(e) => setItem(it.id, { unitPrice: Number(e.target.value) })}
+                />
+                <Money className="text-right text-sm" value={(it.quantity || 0) * (it.unitPrice || 0)} currency={cur} />
+                <button
+                  type="button"
+                  className={iconBtn}
+                  aria-label={`Remove line ${idx + 1}`}
+                  disabled={draft.items.length === 1}
+                  onClick={() => setDraft((d) => ({ ...d, items: d.items.filter((x) => x.id !== it.id) }))}
+                >
+                  <X size={16} aria-hidden="true" />
+                </button>
+              </div>
+            ))}
+            <datalist id="stock-names">
+              {state.stock.map((s) => (
+                <option key={s.id} value={s.name} />
+              ))}
+            </datalist>
+            <div>
+              <button
+                type="button"
+                className={btnGhost}
+                onClick={() => setDraft((d) => ({ ...d, items: [...d.items, { id: newId(), description: "", quantity: 1, unitPrice: 0 }] }))}
+              >
+                <Plus size={16} aria-hidden="true" /> Add line
+              </button>
+            </div>
+          </div>
+          <dl className="mt-6 ml-auto w-full max-w-xs text-sm grid grid-cols-2 gap-y-1">
+            <dt className="text-muted-foreground">Net</dt>
+            <dd className="text-right">
+              <Money value={totals.subtotal} currency={cur} />
+            </dd>
+            <dt className="text-muted-foreground">Tax {draft.taxRate}%</dt>
+            <dd className="text-right">
+              <Money value={totals.tax} currency={cur} />
+            </dd>
+            <dt className="font-semibold border-t border-border pt-2 mt-1">Total</dt>
+            <dd className="text-right font-semibold border-t border-border pt-2 mt-1">
+              <Money value={totals.total} currency={cur} />
+            </dd>
+          </dl>
+        </Panel>
+
+        <Panel>
+          <label className={labelClass}>
+            Notes printed on the {draft.kind}
+            <textarea id="inv-notes" rows={3} className={fieldClass} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} placeholder="e.g. Delivery in 6 weeks. Materials remain our property until paid in full." />
+          </label>
+        </Panel>
+
+        <div className="flex flex-wrap gap-2">
+          <button type="submit" className={btnGhost}>
+            Save draft
+          </button>
+          {draft.status === "draft" && (
+            <button type="button" className={btnPrimary} onClick={() => save(true)}>
+              <Send size={16} aria-hidden="true" /> Save & mark as sent
+            </button>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- detail */
+
+function InvoiceDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { state, upsert, patchItem, remove, update } = useWorkspace();
+  const base = useBase();
+  const inv = state.invoices.find((i) => i.id === id);
+  const [reminder, setReminder] = useState<{ text: string; demo: boolean } | null>(null);
+  const [drafting, setDrafting] = useState(false);
+  const today = todayIso();
+
+  if (!inv) {
+    return (
+      <EmptyState title="This document no longer exists">
+        <Link to={`${base}/invoices`} className={linkClass}>
+          Back to invoices
+        </Link>
+      </EmptyState>
+    );
+  }
+
+  const p = state.profile;
+  const customer = state.customers.find((c) => c.id === inv.customerId);
+  const totals = invoiceTotals(inv);
+  const st = displayStatus(inv, today);
+  const cur = p.currency;
+
+  function markSent() {
+    const patch: Partial<Invoice> = { status: "sent" };
+    if (inv!.kind === "invoice" && !inv!.stockDeducted) {
+      const before = state.stock;
+      const after = deductStock(before, inv!);
+      if (after !== before) {
+        update({ stock: after });
+        patch.stockDeducted = true;
+        toast.message("Linked stock has been booked out.");
+      }
+    }
+    patchItem("invoices", inv!.id, patch);
+    toast.success(`${inv!.number} marked as sent`);
+  }
+
+  function convert() {
+    const created = quoteToInvoice(inv!, state.invoices, p, newId, today);
+    patchItem("invoices", inv!.id, { status: "accepted" });
+    upsert("invoices", created);
+    toast.success(`Invoice ${created.number} created from quote`);
+    navigate(`${base}/invoices/${created.id}`);
+  }
+
+  function duplicate() {
+    const copy: Invoice = {
+      ...inv!,
+      id: newId(),
+      number: nextNumber(state.invoices, inv!.kind, p, today),
+      issueDate: today,
+      dueDate: addDays(today, inv!.kind === "invoice" ? p.paymentTermsDays || 14 : 30),
+      status: "draft",
+      paidAt: undefined,
+      stockDeducted: false,
+      convertedFrom: undefined,
+      items: inv!.items.map((i) => ({ ...i, id: newId() })),
+      createdAt: new Date().toISOString(),
+    };
+    upsert("invoices", copy);
+    navigate(`${base}/invoices/${copy.id}/edit`);
+  }
+
+  async function draftReminder() {
+    setDrafting(true);
+    const late = daysBetween(inv!.dueDate, today);
+    try {
+      const { value, demo } = await writeDraft(
+        {
+          kind: "email",
+          audience: `customer (${customer?.company || customer?.name || "customer"})`,
+          tone: late > 30 ? "firm but polite" : "friendly",
+          notes: `Payment reminder for invoice ${inv!.number} dated ${formatDate(inv!.issueDate)} over ${formatMoney(totals.total, cur)}. It was due on ${formatDate(inv!.dueDate)} and is now ${late} days overdue. Please pay to: ${p.bankDetails || "our usual bank account"}. If payment has already been made, please ignore this message. Contact person: ${p.ownerName || p.businessName}.`,
+        },
+        p.businessName,
+      );
+      setReminder({ text: value, demo });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "The reminder couldn't be written. Please try again.");
+    } finally {
+      setDrafting(false);
+    }
+  }
+
+  const emailSubject = `${kindLabel(inv.kind)} ${inv.number} from ${p.businessName || "us"}`;
+  const emailBody = reminder?.text ?? `Dear ${customer?.name || "customer"},\n\nplease find our ${inv.kind} ${inv.number} over ${formatMoney(totals.total, cur)}${inv.kind === "invoice" ? `, due on ${formatDate(inv.dueDate)}` : ""}.\n\nKind regards,\n${p.ownerName || p.businessName}`;
+  const mailto = `mailto:${customer?.email ?? ""}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+
+  return (
+    <div className="max-w-5xl">
+      <div className="no-print">
+        <Link to={`${base}/invoices`} className={`inline-flex items-center gap-1 text-sm mb-4 ${linkClass} no-underline`}>
+          <ArrowLeft size={16} aria-hidden="true" /> All invoices & quotes
+        </Link>
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-semibold font-mono whitespace-nowrap">{inv.number}</h1>
+            <span className="text-sm text-muted-foreground">
+              {kindLabel(inv.kind)} · {customer ? customer.company || customer.name : "No customer"}
+            </span>
+            <StatusPill status={st} />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {inv.status === "draft" && (
+              <button type="button" className={btnPrimary} onClick={markSent}>
+                <Send size={16} aria-hidden="true" /> Mark as sent
+              </button>
+            )}
+            {inv.kind === "invoice" && inv.status === "sent" && (
+              <button type="button" className={btnPrimary} onClick={() => patchItem("invoices", inv.id, { status: "paid", paidAt: today })}>
+                <BadgeCheck size={16} aria-hidden="true" /> Record payment
+              </button>
+            )}
+            {inv.kind === "invoice" && inv.status === "paid" && (
+              <button type="button" className={btnGhost} onClick={() => patchItem("invoices", inv.id, { status: "sent", paidAt: undefined })}>
+                Undo payment
+              </button>
+            )}
+            {inv.kind === "quote" && inv.status !== "accepted" && (
+              <button type="button" className={btnPrimary} onClick={convert}>
+                <FileText size={16} aria-hidden="true" /> Accepted — create invoice
+              </button>
+            )}
+            {inv.kind === "quote" && inv.status === "sent" && (
+              <button type="button" className={btnGhost} onClick={() => patchItem("invoices", inv.id, { status: "declined" })}>
+                Declined
+              </button>
+            )}
+            {st === "overdue" && (
+              <button type="button" className={btnGhost} onClick={draftReminder} disabled={drafting}>
+                {drafting ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Sparkles size={16} aria-hidden="true" />} Payment reminder
+              </button>
+            )}
+            <a href={mailto} className={btnGhost}>
+              <Mail size={16} aria-hidden="true" /> Email
+            </a>
+            <button type="button" className={btnGhost} onClick={() => window.print()}>
+              <Printer size={16} aria-hidden="true" /> Print / PDF
+            </button>
+            <Link to="edit" className={btnGhost}>
+              <Pencil size={16} aria-hidden="true" /> Edit
+            </Link>
+            <button type="button" className={btnGhost} onClick={duplicate}>
+              <Copy size={16} aria-hidden="true" /> Duplicate
+            </button>
+            <ConfirmDelete
+              label={`Delete ${inv.number}`}
+              onConfirm={() => {
+                if (inv.stockDeducted) {
+                  update({ stock: returnStock(state.stock, inv) });
+                  toast.message("Linked stock has been put back.");
+                }
+                remove("invoices", inv.id);
+                navigate(`${base}/invoices`);
+              }}
+            >
+              <Trash2 size={16} aria-hidden="true" />
+            </ConfirmDelete>
+          </div>
+        </div>
+
+        {reminder && (
+          <Panel className="mb-6 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-heading font-semibold">Payment reminder draft</h2>
+              <button type="button" className={iconBtn} aria-label="Close reminder" onClick={() => setReminder(null)}>
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
+            <DemoNotice show={reminder.demo} />
+            <textarea
+              id="reminder-text"
+              aria-label="Reminder text"
+              rows={10}
+              className={fieldClass}
+              value={reminder.text}
+              onChange={(e) => setReminder({ ...reminder, text: e.target.value })}
+            />
+            <div className="flex flex-wrap gap-2">
+              <a href={mailto} className={btnPrimary}>
+                <Mail size={16} aria-hidden="true" /> Open in email
+              </a>
+              <button
+                type="button"
+                className={btnGhost}
+                onClick={() =>
+                  navigator.clipboard.writeText(reminder.text).then(
+                    () => toast.success("Copied"),
+                    () => toast.error("Copy was blocked — select the text and copy it manually."),
+                  )
+                }
+              >
+                <Copy size={16} aria-hidden="true" /> Copy
+              </button>
+            </div>
+            {customer?.email && <p className="text-xs text-muted-foreground">Customer email: {customer.email}</p>}
+          </Panel>
+        )}
+      </div>
+
+      {/* Printable document */}
+      <article className="print-sheet rounded-lg border border-border bg-card p-6 md:p-10 shadow-sm">
+        <header className="flex flex-col gap-6 sm:flex-row sm:justify-between border-b-2 border-primary pb-6">
+          <div>
+            <p className="font-heading text-2xl font-bold">{p.businessName || "Your business name"}</p>
+            <p className="text-sm text-muted-foreground whitespace-pre-line mt-1">{p.address}</p>
+            <p className="text-sm text-muted-foreground mt-1">{[p.phone, p.email].filter(Boolean).join(" · ")}</p>
+          </div>
+          <div className="sm:text-right">
+            <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold">{kindLabel(inv.kind)}</p>
+            <p className="font-mono text-xl font-medium">{inv.number}</p>
+            <dl className="mt-2 text-sm grid grid-cols-[auto_auto] gap-x-3 sm:justify-end">
+              <dt className="text-muted-foreground">Date</dt>
+              <dd>{formatDate(inv.issueDate)}</dd>
+              <dt className="text-muted-foreground">{inv.kind === "invoice" ? "Due" : "Valid until"}</dt>
+              <dd>{formatDate(inv.dueDate)}</dd>
+            </dl>
+          </div>
+        </header>
+
+        <section className="py-6">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Bill to</p>
+          {customer ? (
+            <>
+              <p className="font-semibold">{customer.company || customer.name}</p>
+              {customer.company && <p className="text-sm">{customer.name}</p>}
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{customer.address}</p>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">No customer selected</p>
+          )}
+        </section>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
+              <tr>
+                <th className="py-2 pr-3 font-medium">#</th>
+                <th className="py-2 pr-3 font-medium">Description</th>
+                <th className="py-2 pr-3 font-medium text-right">Qty</th>
+                <th className="py-2 pr-3 font-medium text-right">Unit price</th>
+                <th className="py-2 font-medium text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {inv.items.map((it, i) => (
+                <tr key={it.id} className="border-b border-border/70">
+                  <td className="py-2 pr-3 font-mono text-muted-foreground">{i + 1}</td>
+                  <td className="py-2 pr-3">{it.description}</td>
+                  <td className="py-2 pr-3 text-right font-mono tabular-nums">{it.quantity}</td>
+                  <td className="py-2 pr-3 text-right">
+                    <Money value={it.unitPrice} currency={cur} />
+                  </td>
+                  <td className="py-2 text-right">
+                    <Money value={it.quantity * it.unitPrice} currency={cur} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <dl className="mt-6 ml-auto w-full max-w-xs text-sm grid grid-cols-2 gap-y-1">
+          <dt className="text-muted-foreground">Net</dt>
+          <dd className="text-right">
+            <Money value={totals.subtotal} currency={cur} />
+          </dd>
+          <dt className="text-muted-foreground">Tax {inv.taxRate}%</dt>
+          <dd className="text-right">
+            <Money value={totals.tax} currency={cur} />
+          </dd>
+          <dt className="font-semibold text-base border-t-2 border-foreground pt-2 mt-1">Total</dt>
+          <dd className="text-right font-semibold text-base border-t-2 border-foreground pt-2 mt-1">
+            <Money value={totals.total} currency={cur} />
+          </dd>
+        </dl>
+
+        {inv.notes && <p className="mt-8 text-sm whitespace-pre-line">{inv.notes}</p>}
+        {inv.kind === "invoice" && (
+          <p className="mt-4 text-sm">
+            Please pay within {daysBetween(inv.issueDate, inv.dueDate)} days{p.bankDetails ? ` to: ${p.bankDetails}` : "."}
+          </p>
+        )}
+        {inv.status === "paid" && inv.paidAt && (
+          <p className="mt-4 inline-block rotate-[-3deg] border-2 border-ll-success text-ll-success px-3 py-1 font-heading font-bold uppercase tracking-widest">
+            Paid {formatDate(inv.paidAt)}
+          </p>
+        )}
+
+        <footer className="mt-10 pt-4 border-t border-border text-xs text-muted-foreground flex flex-col gap-1 sm:flex-row sm:justify-between">
+          <span>{p.invoiceFooter}</span>
+          <span>{p.taxId && `Tax ID ${p.taxId}`}</span>
+        </footer>
+      </article>
+    </div>
+  );
+}
+
+const Invoices = () => (
+  <Routes>
+    <Route index element={<InvoiceList />} />
+    <Route path="new" element={<InvoiceEditor />} />
+    <Route path=":id" element={<InvoiceDetail />} />
+    <Route path=":id/edit" element={<InvoiceEditor />} />
+  </Routes>
+);
+
+export default Invoices;

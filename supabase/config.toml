@@ -1,0 +1,10 @@
+project_id = "xfqlcjdywkfvrkipbunr"  # change to LegacyLift's own project ref (docs/DEPLOYMENT.md, 1a)
+
+# business-ai checks sign-in and firm membership itself (see AI_ALLOW_ANONYMOUS in the function).
+[functions.business-ai]
+verify_jwt = false
+
+# Invites and adding staff trust confirmed email addresses only. Keep this on
+# (hosted projects: Authentication → Providers → Email → "Confirm email").
+[auth.email]
+enable_confirmations = true

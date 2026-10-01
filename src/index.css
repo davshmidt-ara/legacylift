@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+section[id] {
+  scroll-margin-top: 80px;
+}
+
+@layer base {
+  :root {
+    --background: 230 25% 10%;
+    --foreground: 0 0% 96%;
+
+    --card: 230 20% 14%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 230 20% 14%;
+    --popover-foreground: 0 0% 96%;
+
+    --primary: 36 78% 56%;
+    --primary-foreground: 230 25% 8%;
+
+    --secondary: 230 18% 16%;
+    --secondary-foreground: 0 0% 96%;
+
+    --muted: 300 20% 16%;
+    --muted-foreground: 300 12% 74%;
+
+    --accent: 36 78% 56%;
+    --accent-foreground: 230 25% 8%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 96%;
+
+    --border: 230 15% 22%;
+    --input: 230 15% 22%;
+    --ring: 36 78% 56%;
+
+    --radius: 0.5rem;
+
+    --noah-gold: 36 78% 56%;
+    --noah-dark: 230 25% 10%;
+    --noah-darker: 230 30% 6%;
+    --noah-gray: 300 25% 15%;
+    --noah-light-gray: 300 15% 35%;
+    --purple: 265 60% 55%;
+
+    --font-heading: 'Montserrat', sans-serif;
+    --font-body: 'Open Sans', sans-serif;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+/* LegacyLift — scoped theme for the /digital pages. Ledger green on a green-tinted white. */
+@layer base {
+  .theme-legacylift {
+    color-scheme: light;
+    --background: 100 14% 97%;
+    --foreground: 152 28% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 152 28% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 152 28% 10%;
+    --primary: 153 56% 26%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 110 12% 93%;
+    --secondary-foreground: 152 28% 12%;
+    --muted: 110 10% 92%;
+    --muted-foreground: 152 8% 36%;
+    --accent: 140 30% 90%;
+    --accent-foreground: 153 56% 20%;
+    --destructive: 2 70% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 110 10% 85%;
+    --input: 110 10% 85%;
+    --ring: 153 56% 30%;
+    --radius: 0.375rem;
+    --ll-sidebar: 153 40% 14%;
+    --ll-sidebar-foreground: 100 20% 92%;
+    --ll-sidebar-muted: 140 12% 68%;
+    --ll-highlight: 44 92% 52%;
+    --ll-success: 150 60% 30%;
+    --ll-warning: 36 90% 40%;
+    --ll-info: 210 60% 42%;
+    --ll-paper: 48 60% 94%;
+    --ll-paper-ink: 30 22% 24%;
+    --font-heading: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+    --font-body: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-body);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .theme-legacylift {
+      color-scheme: dark;
+      --background: 155 22% 7%;
+      --foreground: 100 12% 93%;
+      --card: 155 18% 10%;
+      --card-foreground: 100 12% 93%;
+      --popover: 155 18% 10%;
+      --popover-foreground: 100 12% 93%;
+      --primary: 148 48% 52%;
+      --primary-foreground: 155 30% 8%;
+      --secondary: 155 14% 14%;
+      --secondary-foreground: 100 12% 93%;
+      --muted: 155 12% 15%;
+      --muted-foreground: 120 6% 64%;
+      --accent: 150 22% 18%;
+      --accent-foreground: 148 48% 70%;
+      --destructive: 2 72% 60%;
+      --destructive-foreground: 155 30% 8%;
+      --border: 155 12% 20%;
+      --input: 155 12% 22%;
+      --ring: 148 48% 52%;
+      --ll-sidebar: 155 26% 5%;
+      --ll-sidebar-foreground: 100 12% 90%;
+      --ll-sidebar-muted: 120 6% 58%;
+      --ll-highlight: 44 90% 58%;
+      --ll-success: 148 50% 55%;
+      --ll-warning: 38 90% 60%;
+      --ll-info: 210 70% 68%;
+      --ll-paper: 48 18% 17%;
+      --ll-paper-ink: 48 30% 84%;
+    }
+  }
+
+  .theme-legacylift h1,
+  .theme-legacylift h2,
+  .theme-legacylift h3 {
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  .theme-legacylift { background: #fff !important; color: #000 !important; }
+  .print-sheet { border: none !important; box-shadow: none !important; padding: 0 !important; max-width: none !important; }
+}
