@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { BASE_PATH } from "@/lib/site";
 import NotFound from "./pages/NotFound.tsx";
 import DigitalLanding from "./pages/digital/DigitalLanding.tsx";
 import DigitalApp from "./pages/digital/DigitalApp.tsx";
@@ -15,7 +16,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename={BASE_PATH || "/"}>
         <Routes>
           <Route path="/" element={<DigitalLanding />} />
           <Route path="/app/*" element={<DigitalApp />} />

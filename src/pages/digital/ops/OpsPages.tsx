@@ -22,6 +22,7 @@ import { PACKAGES, attentionRank, checklistProgress, isTaskDone, nextTask, packa
 import { useOps, type NewClient } from "@/features/ops/store";
 import * as cloud from "@/features/cloud/api";
 import { useAuth } from "@/features/cloud/auth";
+import { siteUrl } from "@/lib/site";
 import { STAGES, type Client, type PackageId, type Stage } from "@/features/ops/types";
 
 export const OPS = "/internal";
@@ -742,7 +743,7 @@ function ClientAccess({ firmId, firmName, defaultEmail }: { firmId: string; firm
   }, [firmId]);
   useEffect(load, [load]);
 
-  const appLink = `${window.location.origin}/app`;
+  const appLink = siteUrl("/app");
   const message = (to: string) =>
     `Hello,\n\nyour LegacyLift workspace for ${firmName} is ready.\n\n1. Open ${appLink}\n2. Choose "Create account" and use this email address: ${to}\n3. Confirm your email, sign in, and your business opens.\n\nKind regards`;
 
@@ -882,7 +883,7 @@ export function OpsTeam() {
                 setName("");
                 load();
               } else {
-                toast.error(`No confirmed account for ${email}. Ask them to create one at ${window.location.origin}/internal first.`);
+                toast.error(`No confirmed account for ${email}. Ask them to create one at ${siteUrl("/internal")} first.`);
               }
             } catch (err) {
               toast.error(err instanceof Error ? err.message : "Couldn't add them.");

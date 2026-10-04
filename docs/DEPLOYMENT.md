@@ -83,6 +83,15 @@ Without a key, the AI features run in "Demo mode".
 
 From then on, every change to `main` is published automatically.
 
+### Option C: GitHub Pages (free, no extra account)
+
+`.github/workflows/pages.yml` publishes every change to `main` to `https://<owner>.github.io/<repo>/`.
+
+1. On a free GitHub plan the repository must be public: **Settings → General → Danger Zone → Change visibility → Public**.
+2. **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+3. **Actions → GitHub Pages → Run workflow** (or push any change to `main`).
+4. In Supabase → **Authentication → URL Configuration**, add `https://<owner>.github.io/<repo>/**` to **Redirect URLs**.
+
 ### Option B: Google Firebase Hosting
 
 1. At [console.firebase.google.com](https://console.firebase.google.com), click **Create a project**, e.g. `legacylift-prod`. Note the **project ID**.

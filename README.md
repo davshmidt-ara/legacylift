@@ -47,7 +47,7 @@ Code lives in `src/features/digital/`, `src/features/ops/`, `src/features/cloud/
 
 ## Hosting
 
-Step-by-step guide to putting the site online with Vercel or with Google Firebase Hosting, plus the one-time backend steps: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). With Firebase, every merge to `main` is tested and published automatically by `.github/workflows/deploy-web.yml`.
+Step-by-step guide to putting the site online with Vercel, Google Firebase Hosting or GitHub Pages, plus the one-time backend steps: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). With Firebase, every merge to `main` is tested and published automatically by `.github/workflows/deploy-web.yml`.
 
 ## Going live: one-time setup
 

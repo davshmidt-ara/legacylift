@@ -1,0 +1,50 @@
+# Publishes the website to GitHub Pages: https://<owner>.github.io/<repo>/
+#
+# One-time setup: Repository → Settings → Pages → Source: "GitHub Actions".
+# (Free GitHub accounts need the repository to be public for Pages.)
+name: GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx vitest run
+      - name: Build for the /<repo>/ sub-folder
+        run: npm run build
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
+      # Pages has no app routing; serving the app as the 404 page makes links like /app work.
+      - run: cp dist/index.html dist/404.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
