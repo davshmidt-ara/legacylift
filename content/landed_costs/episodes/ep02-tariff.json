@@ -1,0 +1,85 @@
+{
+  "id": "ep02-tariff",
+  "title": "Who actually pays a tariff?",
+  "hook_variants": [
+    "A tariff is a tax on another country, right? Wrong.",
+    "Everyone thinks China pays the tariff. Watch who actually pays.",
+    "The tariff is on the import. The bill is on you."
+  ],
+  "scenes": [
+    {
+      "type": "hook",
+      "say": "A tariff is a tax on another country, right? Wrong.",
+      "lines": [
+        "TARIFFS",
+        "TAX THEM?"
+      ],
+      "accent": "THEM?"
+    },
+    {
+      "type": "cargo",
+      "say": "Here's what really happens when a box hits the border.",
+      "text": "WHO PAYS?",
+      "mood": "shocked"
+    },
+    {
+      "type": "route",
+      "say": "A factory abroad sells a toaster to an American importer. The ship lands. Customs stops it.",
+      "stops": [
+        "FACTORY",
+        "SHIP",
+        "CUSTOMS",
+        "IMPORTER"
+      ]
+    },
+    {
+      "type": "stack",
+      "say": "The toaster costs twenty dollars. A twenty-five percent tariff adds five. And the importer pays it, not the factory.",
+      "layers": [
+        {
+          "label": "TOASTER",
+          "amount": 20
+        },
+        {
+          "label": "25% TARIFF",
+          "amount": 5
+        }
+      ],
+      "prefix": "$"
+    },
+    {
+      "type": "versus",
+      "say": "Then the importer raises the price. So who pays in the end? Mostly, the shopper.",
+      "left": {
+        "label": "BEFORE",
+        "value": "$30"
+      },
+      "right": {
+        "label": "AFTER",
+        "value": "$36"
+      }
+    },
+    {
+      "type": "stamp",
+      "say": "A tariff is a tax. It's just collected at the border, from your side.",
+      "word": "YOUR SIDE"
+    },
+    {
+      "type": "outro",
+      "say": "Follow for the money stuff nobody explains.",
+      "text": "FOLLOW @landed_costs"
+    }
+  ],
+  "note": "Simplified example",
+  "caption": "A tariff is paid by the IMPORTER at the border, not by the foreign country. Then guess who the cost gets passed to... 🧾\n\nFollow @landed_costs.",
+  "hashtags": [
+    "#tariffs",
+    "#economics",
+    "#trade",
+    "#money",
+    "#inflation",
+    "#explained",
+    "#business",
+    "#learnontiktok"
+  ]
+}

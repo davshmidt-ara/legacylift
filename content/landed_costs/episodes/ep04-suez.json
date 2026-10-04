@@ -1,0 +1,75 @@
+{
+  "id": "ep04-suez",
+  "title": "One ship froze world trade",
+  "hook_variants": [
+    "One ship got stuck. Nine billion dollars of trade stopped. Every day.",
+    "In 2021 a single ship parked sideways and broke the world.",
+    "This is the most expensive parking job in history."
+  ],
+  "scenes": [
+    {
+      "type": "hook",
+      "say": "One ship got stuck, and the world lost billions a day.",
+      "lines": [
+        "1 SHIP",
+        "STUCK"
+      ],
+      "accent": "STUCK"
+    },
+    {
+      "type": "cargo",
+      "say": "March twenty twenty-one. The Ever Given turns sideways in the Suez Canal.",
+      "text": "SUEZ, 2021",
+      "mood": "shocked"
+    },
+    {
+      "type": "route",
+      "say": "Asia to Europe. The shortcut is Suez. Without it, ships go all the way around Africa.",
+      "stops": [
+        "ASIA",
+        "SUEZ",
+        "EUROPE"
+      ]
+    },
+    {
+      "type": "number",
+      "say": "Six days blocked. Around nine point six billion dollars of trade held up every single day.",
+      "value": 9.6,
+      "prefix": "$",
+      "suffix": "B",
+      "decimals": 1,
+      "label": "TRADE HELD UP PER DAY"
+    },
+    {
+      "type": "list",
+      "say": "Hundreds of ships queued. Deliveries slipped for weeks. Prices jumped.",
+      "items": [
+        "400+ SHIPS WAITING",
+        "WEEKS OF DELAYS",
+        "HIGHER PRICES"
+      ]
+    },
+    {
+      "type": "stamp",
+      "say": "The whole world runs through a few narrow chokepoints.",
+      "word": "CHOKEPOINT"
+    },
+    {
+      "type": "outro",
+      "say": "Follow Landed Costs for how the world really moves.",
+      "text": "FOLLOW @landed_costs"
+    }
+  ],
+  "note": "Lloyd's List estimate, 2021",
+  "caption": "The Ever Given blocked the Suez Canal for 6 days in 2021, holding up an estimated $9.6B of trade PER DAY. 🚢😳\n\nFollow @landed_costs.",
+  "hashtags": [
+    "#suezcanal",
+    "#evergiven",
+    "#shipping",
+    "#history",
+    "#economics",
+    "#trade",
+    "#didyouknow",
+    "#logistics"
+  ]
+}

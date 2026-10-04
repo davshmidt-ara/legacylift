@@ -1,0 +1,84 @@
+{
+  "id": "ep05-inflation",
+  "title": "Your savings are melting",
+  "hook_variants": [
+    "Ten thousand dollars in a drawer is losing money right now.",
+    "Doing nothing with your money is a decision. A costly one.",
+    "Your savings account has a leak."
+  ],
+  "scenes": [
+    {
+      "type": "hook",
+      "say": "Ten thousand dollars sitting still is losing money. Right now.",
+      "lines": [
+        "$10,000",
+        "IS MELTING"
+      ],
+      "accent": "MELTING"
+    },
+    {
+      "type": "cargo",
+      "say": "The number stays the same. What it buys does not.",
+      "text": "SAME NUMBER",
+      "mood": "smug"
+    },
+    {
+      "type": "bars",
+      "say": "At three percent inflation, here is what your ten thousand really buys.",
+      "items": [
+        {
+          "label": "TODAY",
+          "value": 10000
+        },
+        {
+          "label": "5 YEARS",
+          "value": 8626
+        },
+        {
+          "label": "10 YEARS",
+          "value": 7441
+        }
+      ],
+      "prefix": "$"
+    },
+    {
+      "type": "number",
+      "say": "After ten years, you've quietly lost about twenty-six hundred dollars.",
+      "value": 2559,
+      "prefix": "-$",
+      "decimals": 0,
+      "label": "BUYING POWER LOST"
+    },
+    {
+      "type": "list",
+      "say": "So beat it. Higher interest savings. Index funds. Skills that raise your pay.",
+      "items": [
+        "HIGH-YIELD SAVINGS",
+        "INDEX FUNDS",
+        "RAISE YOUR INCOME"
+      ]
+    },
+    {
+      "type": "stamp",
+      "say": "Cash is safe from crashes. It is not safe from time.",
+      "word": "TIME"
+    },
+    {
+      "type": "outro",
+      "say": "Follow Landed Costs. Not financial advice, just math.",
+      "text": "FOLLOW @landed_costs"
+    }
+  ],
+  "note": "3% annual inflation, not financial advice",
+  "caption": "At 3% inflation, $10,000 buys only ~$7,441 worth of stuff after 10 years. Cash is safe from crashes, not from time. ⏳\n\nNot financial advice, just math.",
+  "hashtags": [
+    "#inflation",
+    "#personalfinance",
+    "#money",
+    "#savings",
+    "#investing",
+    "#financialliteracy",
+    "#moneytips",
+    "#economics"
+  ]
+}

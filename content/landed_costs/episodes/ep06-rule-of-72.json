@@ -1,0 +1,75 @@
+{
+  "id": "ep06-rule-of-72",
+  "title": "The rule of 72",
+  "hook_variants": [
+    "Bankers use one number to see the future of your money. It's seventy-two.",
+    "Want to know when your money doubles? Divide by seventy-two.",
+    "The math trick schools forgot to teach you."
+  ],
+  "scenes": [
+    {
+      "type": "hook",
+      "say": "One number tells you when your money doubles. Seventy-two.",
+      "lines": [
+        "THE RULE",
+        "OF 72"
+      ],
+      "accent": "72"
+    },
+    {
+      "type": "cargo",
+      "say": "Take seventy-two. Divide it by your yearly return. That's how many years to double.",
+      "text": "72 ÷ RATE",
+      "mood": "smug"
+    },
+    {
+      "type": "bars",
+      "say": "Two percent? Thirty-six years. Six percent? Twelve. Nine percent? Just eight.",
+      "items": [
+        {
+          "label": "2%",
+          "value": 36
+        },
+        {
+          "label": "6%",
+          "value": 12
+        },
+        {
+          "label": "9%",
+          "value": 8
+        }
+      ],
+      "suffix": " YRS"
+    },
+    {
+      "type": "number",
+      "say": "Put in ten thousand at twenty, earn nine percent, and by sixty it has doubled five times.",
+      "value": 320000,
+      "prefix": "$",
+      "decimals": 0,
+      "label": "AT AGE 60 (5 DOUBLINGS)"
+    },
+    {
+      "type": "stamp",
+      "say": "It works for debt too. Twenty-four percent on a credit card doubles what you owe in three years.",
+      "word": "DEBT TOO"
+    },
+    {
+      "type": "outro",
+      "say": "Follow Landed Costs for money math in thirty seconds.",
+      "text": "FOLLOW @landed_costs"
+    }
+  ],
+  "note": "Approximation, not financial advice",
+  "caption": "72 ÷ your yearly return = years to double your money. Works for credit card debt too (that's the scary part). 📈\n\nSave this.",
+  "hashtags": [
+    "#ruleof72",
+    "#compoundinterest",
+    "#investing",
+    "#personalfinance",
+    "#money",
+    "#financialfreedom",
+    "#moneytips",
+    "#mathtricks"
+  ]
+}

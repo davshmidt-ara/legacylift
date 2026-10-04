@@ -1,0 +1,68 @@
+{
+  "id": "ep07-dubai",
+  "title": "Dubai got rich moving other people's stuff",
+  "hook_variants": [
+    "Dubai isn't rich because of oil. Not anymore.",
+    "Oil is only a tiny slice of Dubai's economy. So where's the money from?",
+    "Dubai makes money from things it doesn't even make."
+  ],
+  "scenes": [
+    {
+      "type": "hook",
+      "say": "Dubai isn't rich because of oil. Not anymore.",
+      "lines": [
+        "DUBAI",
+        "NOT OIL?"
+      ],
+      "accent": "NOT OIL?"
+    },
+    {
+      "type": "cargo",
+      "say": "Oil today is only a small slice of Dubai's economy. The real engine? Moving stuff.",
+      "text": "THE REAL ENGINE",
+      "mood": "shocked"
+    },
+    {
+      "type": "route",
+      "say": "Goods arrive from Asia, get stored tax-free, then ship out to Africa, Europe and the Middle East.",
+      "stops": [
+        "ASIA",
+        "JEBEL ALI",
+        "AFRICA",
+        "EUROPE"
+      ]
+    },
+    {
+      "type": "list",
+      "say": "Jebel Ali, the biggest port in the Middle East. Free zones. Low taxes. A giant airline hub.",
+      "items": [
+        "MEGA PORT",
+        "FREE ZONES",
+        "LOW TAX",
+        "AIR HUB"
+      ]
+    },
+    {
+      "type": "stamp",
+      "say": "Dubai doesn't need to make the product. It takes a cut every time it passes through.",
+      "word": "THE CUT"
+    },
+    {
+      "type": "outro",
+      "say": "Follow Landed Costs to see where the money really flows.",
+      "text": "FOLLOW @landed_costs"
+    }
+  ],
+  "note": "Simplified overview",
+  "caption": "Oil is a small slice of Dubai's economy today. Its real engine: trade, re-exports, free zones and one of the world's biggest ports. 🏙️🚢\n\nFollow @landed_costs.",
+  "hashtags": [
+    "#dubai",
+    "#economics",
+    "#trade",
+    "#business",
+    "#geography",
+    "#logistics",
+    "#money",
+    "#didyouknow"
+  ]
+}

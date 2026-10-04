@@ -1,0 +1,89 @@
+{
+  "id": "ep01-tshirt",
+  "title": "Where your $25 T-shirt money goes",
+  "hook_variants": [
+    "This shirt cost about two dollars to make. You paid twenty-five.",
+    "You paid twenty-five dollars for two dollars of T-shirt.",
+    "Somebody made twenty-three dollars off your T-shirt. Let's find them."
+  ],
+  "scenes": [
+    {
+      "type": "hook",
+      "say": "This shirt cost about two dollars to make. You paid twenty-five.",
+      "lines": [
+        "$2 TO MAKE",
+        "$25 TO BUY"
+      ],
+      "accent": "$25"
+    },
+    {
+      "type": "cargo",
+      "say": "So who took the other twenty-three? Let's follow the money.",
+      "text": "WHO TOOK $23?",
+      "mood": "smug"
+    },
+    {
+      "type": "route",
+      "say": "Cotton and sewing in Bangladesh. Then a container ship. Then a port. Then a truck to the store.",
+      "stops": [
+        "FACTORY",
+        "SHIP",
+        "PORT",
+        "STORE"
+      ]
+    },
+    {
+      "type": "number",
+      "say": "Shipping it across the ocean? Around ten cents. Not a typo.",
+      "value": 0.1,
+      "prefix": "$",
+      "decimals": 2,
+      "label": "OCEAN SHIPPING PER SHIRT"
+    },
+    {
+      "type": "stack",
+      "say": "Make it, two dollars. Ship and tariff, about two. The brand takes around six. The store takes the rest.",
+      "layers": [
+        {
+          "label": "MAKE IT",
+          "amount": 2
+        },
+        {
+          "label": "SHIP + TARIFF",
+          "amount": 2
+        },
+        {
+          "label": "BRAND",
+          "amount": 6
+        },
+        {
+          "label": "STORE",
+          "amount": 15
+        }
+      ],
+      "prefix": "$"
+    },
+    {
+      "type": "stamp",
+      "say": "The most expensive part of your shirt is the shelf it hangs on.",
+      "word": "THE SHELF"
+    },
+    {
+      "type": "outro",
+      "say": "Follow Landed Costs. I show you what things really cost.",
+      "text": "FOLLOW @landed_costs"
+    }
+  ],
+  "note": "Illustrative estimates",
+  "caption": "Your $25 T-shirt costs about $2 to make. The ocean crossing? Around 10 cents. So where does the rest go? 👕🚢\n\nFollow @landed_costs for what things REALLY cost.",
+  "hashtags": [
+    "#money",
+    "#economics",
+    "#business",
+    "#fashion",
+    "#shipping",
+    "#tradeexplained",
+    "#financetips",
+    "#didyouknow"
+  ]
+}

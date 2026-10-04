@@ -1,0 +1,79 @@
+{
+  "id": "ep09-container",
+  "title": "The box that made everything cheap",
+  "hook_variants": [
+    "The most important invention in your house is a metal box.",
+    "This boring box is why everything you own is cheap.",
+    "Before 1956, shipping was a nightmare. Then came the box."
+  ],
+  "scenes": [
+    {
+      "type": "hook",
+      "say": "The reason everything you own is cheap? A metal box.",
+      "lines": [
+        "A METAL",
+        "BOX"
+      ],
+      "accent": "BOX"
+    },
+    {
+      "type": "cargo",
+      "say": "Yes. Me. Let me tell you my origin story.",
+      "text": "MY ORIGIN STORY",
+      "mood": "smug"
+    },
+    {
+      "type": "versus",
+      "say": "Before containers, workers loaded sacks and crates by hand. Ships sat in port for days.",
+      "left": {
+        "label": "BY HAND",
+        "value": "DAYS"
+      },
+      "right": {
+        "label": "CONTAINER",
+        "value": "HOURS"
+      }
+    },
+    {
+      "type": "number",
+      "say": "In 1956 Malcom McLean shipped the first containers. Loading cost fell more than ninety percent.",
+      "value": 90,
+      "suffix": "%",
+      "prefix": "-",
+      "decimals": 0,
+      "label": "LOADING COST"
+    },
+    {
+      "type": "list",
+      "say": "One standard box fits ships, trains and trucks. No unpacking. No theft. No waiting.",
+      "items": [
+        "SHIP",
+        "TRAIN",
+        "TRUCK",
+        "SAME BOX"
+      ]
+    },
+    {
+      "type": "stamp",
+      "say": "Globalisation wasn't only politics. It was a box.",
+      "word": "THE BOX"
+    },
+    {
+      "type": "outro",
+      "say": "Follow Landed Costs. I'm literally the main character.",
+      "text": "FOLLOW @landed_costs"
+    }
+  ],
+  "note": "Historical estimates",
+  "caption": "In 1956 Malcom McLean shipped the first containers. Loading costs dropped by over 90% and global trade exploded. The box changed everything. 📦🌍",
+  "hashtags": [
+    "#history",
+    "#shipping",
+    "#containers",
+    "#economics",
+    "#globalization",
+    "#logistics",
+    "#invention",
+    "#didyouknow"
+  ]
+}

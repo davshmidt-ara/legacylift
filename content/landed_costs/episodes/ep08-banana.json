@@ -1,0 +1,75 @@
+{
+  "id": "ep08-banana",
+  "title": "How is a banana this cheap?",
+  "hook_variants": [
+    "This banana travelled thousands of kilometres. It costs less than a candy bar.",
+    "A banana crossed an ocean in a fridge, and it still costs pennies.",
+    "Bananas should be expensive. Here's why they're not."
+  ],
+  "scenes": [
+    {
+      "type": "hook",
+      "say": "This banana crossed an ocean in a fridge. It costs pennies.",
+      "lines": [
+        "1000s OF KM",
+        "FOR PENNIES"
+      ],
+      "accent": "PENNIES"
+    },
+    {
+      "type": "cargo",
+      "say": "How? Three words. Scale, ships, and green.",
+      "text": "HOW?!",
+      "mood": "shocked"
+    },
+    {
+      "type": "route",
+      "say": "Picked green in Ecuador. Cooled to about thirteen degrees. Shipped north in refrigerated containers.",
+      "stops": [
+        "ECUADOR",
+        "REEFER SHIP",
+        "PORT",
+        "RIPENING ROOM"
+      ]
+    },
+    {
+      "type": "number",
+      "say": "One refrigerated container carries over a hundred thousand bananas.",
+      "value": 100000,
+      "decimals": 0,
+      "label": "BANANAS PER CONTAINER",
+      "suffix": "+"
+    },
+    {
+      "type": "list",
+      "say": "Then ethylene gas ripens them on cue. Shops often sell them at cost just to get you inside.",
+      "items": [
+        "RIPENED ON DEMAND",
+        "HUGE VOLUME",
+        "SOLD TO LURE YOU IN"
+      ]
+    },
+    {
+      "type": "stamp",
+      "say": "Cheap isn't magic. It's logistics at a massive scale.",
+      "word": "SCALE"
+    },
+    {
+      "type": "outro",
+      "say": "Follow Landed Costs. Next time: why your coffee isn't cheap.",
+      "text": "FOLLOW @landed_costs"
+    }
+  ],
+  "note": "Approximate figures",
+  "caption": "Picked green, shipped cold, ripened with gas on demand, and often sold near cost to get you in the shop. The humble banana is a logistics masterpiece. 🍌🚢",
+  "hashtags": [
+    "#bananas",
+    "#logistics",
+    "#shipping",
+    "#economics",
+    "#food",
+    "#supplychain",
+    "#didyouknow",
+    "#business"
+  ]
+}

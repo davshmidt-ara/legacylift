@@ -1,0 +1,68 @@
+{
+  "id": "ep10-iphone",
+  "title": "Your phone's world tour",
+  "hook_variants": [
+    "Your phone has seen more countries than you have.",
+    "No single country can build your phone. Not one.",
+    "Your phone flew around the world before you ever touched it."
+  ],
+  "scenes": [
+    {
+      "type": "hook",
+      "say": "Your phone has seen more countries than you have.",
+      "lines": [
+        "YOUR PHONE",
+        "WORLD TOUR"
+      ],
+      "accent": "WORLD TOUR"
+    },
+    {
+      "type": "cargo",
+      "say": "Designed in one place. Built from parts made everywhere.",
+      "text": "MADE EVERYWHERE",
+      "mood": "smug"
+    },
+    {
+      "type": "route",
+      "say": "Chips from Taiwan. Screens from Korea. Rare metals from Africa and China. Assembly in China or India.",
+      "stops": [
+        "TAIWAN",
+        "KOREA",
+        "CHINA",
+        "INDIA",
+        "YOU"
+      ]
+    },
+    {
+      "type": "list",
+      "say": "Hundreds of suppliers. Dozens of countries. One tiny device in your hand.",
+      "items": [
+        "100s OF SUPPLIERS",
+        "DOZENS OF COUNTRIES",
+        "1 DEVICE"
+      ]
+    },
+    {
+      "type": "stamp",
+      "say": "That's why one blocked port or one tariff can change what your phone costs.",
+      "word": "FRAGILE"
+    },
+    {
+      "type": "outro",
+      "say": "Follow Landed Costs. Comment a product and I'll trace it.",
+      "text": "FOLLOW @landed_costs"
+    }
+  ],
+  "note": "Simplified supply chain",
+  "caption": "Chips, screens, metals and assembly from all over the world. No single country can build your phone alone. 📱🌍\n\nComment a product and I'll trace its journey next.",
+  "hashtags": [
+    "#iphone",
+    "#supplychain",
+    "#tech",
+    "#economics",
+    "#trade",
+    "#globalization",
+    "#didyouknow",
+    "#business"
+  ]
+}

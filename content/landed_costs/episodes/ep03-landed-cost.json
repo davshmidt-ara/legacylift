@@ -1,0 +1,95 @@
+{
+  "id": "ep03-landed-cost",
+  "title": "The price is a lie: landed cost",
+  "hook_variants": [
+    "That ten dollar product on Alibaba? It's not ten dollars.",
+    "Every beginner seller makes this mistake. It kills their profit.",
+    "The price you see is never the price you pay."
+  ],
+  "scenes": [
+    {
+      "type": "hook",
+      "say": "That ten dollar product on Alibaba? It's not ten dollars.",
+      "lines": [
+        "$10?",
+        "NOT EVEN CLOSE"
+      ],
+      "accent": "$10?"
+    },
+    {
+      "type": "cargo",
+      "say": "Pros call the real number the landed cost. It's literally my name.",
+      "text": "LANDED COST",
+      "mood": "smug"
+    },
+    {
+      "type": "stack",
+      "say": "Ten for the product. One fifty for freight. A bit of insurance. Two in duties. One in port and broker fees.",
+      "layers": [
+        {
+          "label": "PRODUCT",
+          "amount": 10
+        },
+        {
+          "label": "FREIGHT",
+          "amount": 1.5
+        },
+        {
+          "label": "INSURANCE",
+          "amount": 0.2
+        },
+        {
+          "label": "DUTY",
+          "amount": 2
+        },
+        {
+          "label": "FEES",
+          "amount": 1
+        }
+      ],
+      "prefix": "$"
+    },
+    {
+      "type": "number",
+      "say": "Landed cost: fourteen seventy. That's forty-seven percent more than the sticker.",
+      "value": 14.7,
+      "prefix": "$",
+      "decimals": 2,
+      "label": "REAL COST PER UNIT"
+    },
+    {
+      "type": "versus",
+      "say": "Sell it for twenty and you think you make ten. You really make about five.",
+      "left": {
+        "label": "YOU THINK",
+        "value": "$10"
+      },
+      "right": {
+        "label": "YOU MAKE",
+        "value": "$5"
+      }
+    },
+    {
+      "type": "stamp",
+      "say": "Never price from the sticker. Price from the landed cost.",
+      "word": "LANDED"
+    },
+    {
+      "type": "outro",
+      "say": "Follow Landed Costs before you import anything.",
+      "text": "FOLLOW @landed_costs"
+    }
+  ],
+  "note": "Illustrative estimates",
+  "caption": "Product + freight + insurance + duty + fees = LANDED COST. Price from that, not the sticker. 📦\n\nSave this before your first import.",
+  "hashtags": [
+    "#ecommerce",
+    "#importexport",
+    "#alibaba",
+    "#amazonfba",
+    "#smallbusiness",
+    "#landedcost",
+    "#entrepreneur",
+    "#business"
+  ]
+}
