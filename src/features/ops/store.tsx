@@ -128,18 +128,18 @@ export function OpsProvider({ children, seedExamples = false }: { children: Reac
       log: log.map((text, i) => ({ id: newId(), at: at(Math.max(0, created - i * 7)), text, author: "Team" })).reverse(),
     });
 
-    const hartmann = make(
-      { firmName: "Hartmann & Söhne Joinery", contactName: "Klaus Hartmann", email: SAMPLE_PROFILE.email, phone: SAMPLE_PROFILE.phone, industry: "Joinery", city: "Köln", package: "suite", stage: "active", owner: "Team", notes: "Third generation. Klaus prefers calls before 9am.", manualDone: ["kickoff", "training"] },
+    const joinery = make(
+      { firmName: SAMPLE_PROFILE.businessName, contactName: SAMPLE_PROFILE.ownerName, email: SAMPLE_PROFILE.email, phone: SAMPLE_PROFILE.phone, industry: "Joinery", city: "Rīga", package: "suite", stage: "active", owner: "Team", notes: "Third generation. Andris prefers calls before 9am.", manualDone: ["kickoff", "training"] },
       60,
       ["Client added (lead)", "Kick-off call held", "Staff training done with 4 people", "Moved to active"],
     );
     const bakery = make(
-      { firmName: "Bäckerei Lindner", contactName: "Maria Lindner", email: "maria@baeckerei-lindner.example", phone: "+49 30 555 0199", industry: "Bakery, 3 shops", city: "Berlin", package: "start", stage: "onboarding", owner: "Team", notes: "Invoices for café customers are still handwritten.", manualDone: ["kickoff"] },
+      { firmName: "Maiznīca Saulīte", contactName: "Marija Saule", email: "marija@maiznica-saulite.example", phone: "+371 2000 0199", industry: "Bakery, 3 shops", city: "Liepāja", package: "start", stage: "onboarding", owner: "Team", notes: "Invoices for café customers are still handwritten.", manualDone: ["kickoff"] },
       12,
       ["Client added (lead)", "Kick-off call held"],
     );
     const printer = make(
-      { firmName: "Druckerei Voss & Co.", contactName: "Peter Voss", email: "p.voss@druckerei-voss.example", phone: "+49 40 555 0123", industry: "Print shop", city: "Hamburg", package: "partner", stage: "lead", owner: "Team", notes: "Interested in AI for quotes. Demo booked.", manualDone: [] },
+      { firmName: "Tipogrāfija Kurzeme", contactName: "Pēteris Vītols", email: "peteris@tipografija-kurzeme.example", phone: "+371 2000 0123", industry: "Print shop", city: "Ventspils", package: "partner", stage: "lead", owner: "Team", notes: "Interested in AI for quotes. Demo booked.", manualDone: [] },
       3,
       ["Client added (lead)"],
     );
@@ -147,18 +147,18 @@ export function OpsProvider({ children, seedExamples = false }: { children: Reac
     try {
       const sample = buildSampleData(newId, today);
       localStorage.setItem(
-        clientStorageKey(hartmann.id),
+        clientStorageKey(joinery.id),
         JSON.stringify({ ...EMPTY_STATE, profile: SAMPLE_PROFILE, ...sample, records: SAMPLE_RECORDS.map((r) => toRecord(r, "sample")) }),
       );
       localStorage.setItem(
         clientStorageKey(bakery.id),
-        JSON.stringify({ ...EMPTY_STATE, profile: { ...EMPTY_PROFILE, businessName: bakery.firmName, email: bakery.email, phone: bakery.phone, currency: "EUR", defaultTaxRate: 7 } }),
+        JSON.stringify({ ...EMPTY_STATE, profile: { ...EMPTY_PROFILE, businessName: bakery.firmName, email: bakery.email, phone: bakery.phone, currency: "EUR", defaultTaxRate: 21 } }),
       );
       localStorage.setItem(clientStorageKey(printer.id), JSON.stringify({ ...EMPTY_STATE, profile: { ...EMPTY_PROFILE, businessName: printer.firmName } }));
     } catch {
       // storage blocked — clients still appear with empty workspaces
     }
-    setOps((o) => ({ ...o, clients: [...o.clients, hartmann, bakery, printer] }));
+    setOps((o) => ({ ...o, clients: [...o.clients, joinery, bakery, printer] }));
   }, []);
 
   useEffect(() => {

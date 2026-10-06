@@ -85,6 +85,8 @@ interface Payload {
   answers?: Record<string, unknown>;
   draft?: { kind: string; audience: string; tone: string; notes: string };
   businessName?: string;
+  /** The language the person uses LegacyLift in: "lv" (Latvian) or "en" (English, the default). */
+  language?: string;
 }
 
 const SYSTEM_BASE =
@@ -186,8 +188,15 @@ function attachmentBlock(att: Attachment): Anthropic.Beta.BetaContentBlockParam 
   };
 }
 
+const LANGUAGE_RULES: Record<string, string> = {
+  lv:
+    "The person uses LegacyLift in Latvian. Write everything meant for people (titles, summaries, field labels, answers, plans and letters) in Latvian, " +
+    "using polite forms (Jūs) and Latvian number and date formats. Keep names, numbers and quoted document text exactly as they appear.",
+  en: "Write in English unless the person writes to you in another language.",
+};
+
 function buildRequest(body: Payload) {
-  const business = body.businessName ? `The firm is called "${body.businessName}".` : "";
+  const business = `${body.businessName ? `The firm is called "${body.businessName}". ` : ""}${body.language === "lv" ? LANGUAGE_RULES.lv : LANGUAGE_RULES.en}`;
 
   switch (body.task) {
     case "extract": {

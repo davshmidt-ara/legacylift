@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { FlaskConical } from "lucide-react";
-import type { DisplayStatus } from "./types";
+import type { DisplayStatus, DocType } from "./types";
+import { locale, msg, useT } from "@/i18n";
 
 const focus =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
@@ -55,16 +56,38 @@ const STATUS_STYLE: Record<DisplayStatus, string> = {
   overdue: "bg-destructive/15 text-destructive",
 };
 
+export const STATUS_LABEL: Record<DisplayStatus, string> = {
+  draft: msg("draft"),
+  sent: msg("sent"),
+  paid: msg("paid"),
+  accepted: msg("accepted"),
+  declined: msg("declined"),
+  overdue: msg("overdue"),
+};
+
+export const DOC_TYPE_LABEL: Record<DocType, string> = {
+  invoice: msg("invoice"),
+  receipt: msg("receipt"),
+  order: msg("order"),
+  contract: msg("contract"),
+  customer: msg("customer"),
+  letter: msg("letter"),
+  inventory: msg("inventory"),
+  other: msg("other"),
+};
+
 export function StatusPill({ status }: { status: DisplayStatus }) {
+  const t = useT();
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${STATUS_STYLE[status]}`}>
-      {status}
+      {t(STATUS_LABEL[status])}
     </span>
   );
 }
 
 /** Two-step delete: first click arms, second click confirms. Works where window.confirm is blocked. */
 export function ConfirmDelete({ label, onConfirm, children }: { label: string; onConfirm: () => void; children: ReactNode }) {
+  const t = useT();
   const [armed, setArmed] = useState(false);
   useEffect(() => {
     if (!armed) return;
@@ -73,7 +96,7 @@ export function ConfirmDelete({ label, onConfirm, children }: { label: string; o
   }, [armed]);
   return armed ? (
     <button type="button" className={btnDanger} onClick={onConfirm}>
-      Confirm delete
+      {t("Confirm delete")}
     </button>
   ) : (
     <button type="button" className={iconBtn} aria-label={label} onClick={() => setArmed(true)}>
@@ -83,14 +106,12 @@ export function ConfirmDelete({ label, onConfirm, children }: { label: string; o
 }
 
 export function DemoNotice({ show }: { show: boolean }) {
+  const t = useT();
   if (!show) return null;
   return (
     <div role="status" className="flex items-start gap-2 rounded-md border border-ll-highlight/50 bg-ll-highlight/10 px-3 py-2 text-xs text-foreground">
       <FlaskConical size={14} className="mt-0.5 shrink-0 text-ll-warning" aria-hidden="true" />
-      <span>
-        Demo mode: the AI service isn't connected, so this result came from a simple built-in fallback. Deploy the{" "}
-        <code className="font-mono">business-ai</code> function with an Anthropic API key for full AI results.
-      </span>
+      <span>{t("Demo mode: the AI service isn't connected, so this result came from a simple built-in helper. Full AI results appear once the AI is switched on.")}</span>
     </div>
   );
 }
@@ -98,7 +119,7 @@ export function DemoNotice({ show }: { show: boolean }) {
 export function formatMoney(amount: number | null | undefined, currency: string) {
   if (amount === null || amount === undefined || Number.isNaN(amount)) return "—";
   try {
-    return new Intl.NumberFormat(undefined, {
+    return new Intl.NumberFormat(locale(), {
       style: currency ? "currency" : "decimal",
       currency: currency || undefined,
       minimumFractionDigits: 2,
@@ -112,7 +133,7 @@ export function formatMoney(amount: number | null | undefined, currency: string)
 export function formatDate(iso: string) {
   if (!iso) return "—";
   const d = new Date(`${iso.slice(0, 10)}T12:00:00Z`);
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString(locale(), { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
 export function Money({ value, currency, className = "" }: { value: number | null | undefined; currency: string; className?: string }) {

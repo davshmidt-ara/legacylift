@@ -33,6 +33,8 @@ import Assistant from "@/features/digital/modules/Assistant";
 import RoadmapModule from "@/features/digital/modules/Roadmap";
 import Writer from "@/features/digital/modules/Writer";
 import Settings from "@/features/digital/modules/Settings";
+import { msg, useT } from "@/i18n";
+import { LanguageSwitch } from "@/i18n/LanguageSwitch";
 
 interface NavEntry {
   to: string; // relative to the workspace base
@@ -44,27 +46,28 @@ interface NavEntry {
 
 const GROUPS: { title: string; items: NavEntry[] }[] = [
   {
-    title: "Run the business",
+    title: msg("Run the business"),
     items: [
-      { to: "", label: "Overview", icon: LayoutDashboard, end: true },
-      { to: "/invoices", label: "Invoices & quotes", icon: ReceiptText, badge: "overdue" },
-      { to: "/customers", label: "Customers", icon: Users },
-      { to: "/stock", label: "Stock", icon: Boxes, badge: "lowStock" },
+      { to: "", label: msg("Overview"), icon: LayoutDashboard, end: true },
+      { to: "/invoices", label: msg("Invoices & quotes"), icon: ReceiptText, badge: "overdue" },
+      { to: "/customers", label: msg("Customers"), icon: Users },
+      { to: "/stock", label: msg("Stock"), icon: Boxes, badge: "lowStock" },
     ],
   },
   {
-    title: "AI tools",
+    title: msg("AI tools"),
     items: [
-      { to: "/digitize", label: "Digitize paper", icon: FileScan },
-      { to: "/documents", label: "Documents", icon: Archive },
-      { to: "/assistant", label: "Assistant", icon: Bot },
-      { to: "/writer", label: "Writer", icon: PenLine },
-      { to: "/roadmap", label: "Digital roadmap", icon: Map },
+      { to: "/digitize", label: msg("Digitize paper"), icon: FileScan },
+      { to: "/documents", label: msg("Documents"), icon: Archive },
+      { to: "/assistant", label: msg("Assistant"), icon: Bot },
+      { to: "/writer", label: msg("Writer"), icon: PenLine },
+      { to: "/roadmap", label: msg("Digital roadmap"), icon: Map },
     ],
   },
 ];
 
 function NavItems({ onNavigate }: { onNavigate?: () => void }) {
+  const t = useT();
   const { state } = useWorkspace();
   const base = useBase();
   const counts = { overdue: receivables(state.invoices).overdueCount, lowStock: lowStock(state.stock).length };
@@ -81,11 +84,11 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
         }
       >
         <Icon size={17} aria-hidden="true" />
-        <span className="flex-1">{label}</span>
+        <span className="flex-1">{t(label)}</span>
         {badge && counts[badge] > 0 && (
           <span
             className={`min-w-5 rounded-full px-1.5 text-center text-[11px] font-semibold font-mono ${badge === "overdue" ? "bg-destructive text-white" : "bg-ll-highlight text-black"}`}
-            aria-label={badge === "overdue" ? `${counts[badge]} overdue` : `${counts[badge]} low stock`}
+            aria-label={t(badge === "overdue" ? "Overdue: {n}" : "Low stock: {n}", { n: counts[badge] })}
           >
             {counts[badge]}
           </span>
@@ -97,11 +100,11 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
     <div className="flex flex-col gap-6">
       {GROUPS.map((g) => (
         <div key={g.title}>
-          <p className="px-3 mb-1 text-[11px] uppercase tracking-[0.14em] text-ll-sidebar-muted/80">{g.title}</p>
+          <p className="px-3 mb-1 text-[11px] uppercase tracking-[0.14em] text-ll-sidebar-muted/80">{t(g.title)}</p>
           <ul className="flex flex-col gap-0.5">{g.items.map(item)}</ul>
         </div>
       ))}
-      <ul>{item({ to: "/settings", label: "Settings", icon: SettingsIcon })}</ul>
+      <ul>{item({ to: "/settings", label: msg("Settings"), icon: SettingsIcon })}</ul>
     </div>
   );
 }
@@ -118,16 +121,17 @@ export function Brand({ to = "/", suffix }: { to?: string; suffix?: string }) {
 
 /** The two things people do most, one click away from every page. */
 function QuickNew({ onNavigate }: { onNavigate?: () => void }) {
+  const t = useT();
   const base = useBase();
   const cls =
     "flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ll-highlight";
   return (
     <div className="mt-6 mb-4 flex gap-2 px-1">
       <Link to={`${base}/invoices/new?kind=invoice`} onClick={onNavigate} className={`${cls} bg-ll-highlight text-black hover:bg-ll-highlight/90`}>
-        <Plus size={15} aria-hidden="true" /> Invoice
+        <Plus size={15} aria-hidden="true" /> {t("Invoice")}
       </Link>
       <Link to={`${base}/digitize`} onClick={onNavigate} className={`${cls} bg-white/10 text-ll-sidebar-foreground hover:bg-white/15`}>
-        <FileScan size={15} aria-hidden="true" /> Scan
+        <FileScan size={15} aria-hidden="true" /> {t("Scan")}
       </Link>
     </div>
   );
@@ -135,36 +139,37 @@ function QuickNew({ onNavigate }: { onNavigate?: () => void }) {
 
 /** Tells people, in plain words, whether their work is safe. */
 function SyncBadge() {
+  const t = useT();
   const { sync } = useWorkspace();
   const base = "flex items-start gap-2 px-3 text-[12px] leading-snug";
   switch (sync.status) {
     case "device":
       return (
         <p className={`${base} text-ll-sidebar-muted`}>
-          <HardDrive size={14} className="mt-0.5 shrink-0" aria-hidden="true" /> Saved on this device only. Download a backup from Settings.
+          <HardDrive size={14} className="mt-0.5 shrink-0" aria-hidden="true" /> {t("Saved on this device only. Download a backup from Settings.")}
         </p>
       );
     case "saving":
       return (
         <p className={`${base} text-ll-sidebar-muted`} role="status">
-          <Loader2 size={14} className="mt-0.5 shrink-0 animate-spin" aria-hidden="true" /> Saving…
+          <Loader2 size={14} className="mt-0.5 shrink-0 animate-spin" aria-hidden="true" /> {t("Saving…")}
         </p>
       );
     case "error":
       return (
         <div className={`${base} text-ll-highlight flex-col`} role="alert">
           <span className="flex items-start gap-2">
-            <CloudOff size={14} className="mt-0.5 shrink-0" aria-hidden="true" /> Not saved yet — trying again. Keep this tab open.
+            <CloudOff size={14} className="mt-0.5 shrink-0" aria-hidden="true" /> {t("Not saved yet — trying again. Keep this tab open.")}
           </span>
           <button type="button" onClick={sync.retry} className="underline underline-offset-2 text-ll-sidebar-foreground">
-            Try now
+            {t("Try now")}
           </button>
         </div>
       );
     default:
       return (
         <p className={`${base} text-ll-sidebar-muted`} role="status">
-          <Cloud size={14} className="mt-0.5 shrink-0" aria-hidden="true" /> All changes saved
+          <Cloud size={14} className="mt-0.5 shrink-0" aria-hidden="true" /> {t("All changes saved")}
         </p>
       );
   }
@@ -210,6 +215,7 @@ export function WorkspaceShell({
   sidebarTop,
   title = "LegacyLift",
 }: ShellProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -229,12 +235,13 @@ export function WorkspaceShell({
             <Brand to={homeHref} suffix={brandSuffix} />
             <BusinessName />
             <QuickNew />
-            <nav aria-label="Workspace" className="mt-3">
+            <nav aria-label={t("Workspace")} className="mt-3">
               <NavItems />
             </nav>
             <div className="mt-auto pt-6 flex flex-col gap-3">
               <SyncBadge />
               {account}
+              <LanguageSwitch className="mx-3 self-start" />
             </div>
           </aside>
 
@@ -245,20 +252,21 @@ export function WorkspaceShell({
               onClick={() => setOpen((o) => !o)}
               aria-expanded={open}
               aria-controls="workspace-mobile-nav"
-              aria-label={open ? "Close menu" : "Open menu"}
+              aria-label={open ? t("Close menu") : t("Open menu")}
               className="min-h-11 min-w-11 inline-flex items-center justify-center rounded text-ll-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ll-highlight"
             >
               {open ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
             </button>
           </header>
           {open && (
-            <nav id="workspace-mobile-nav" aria-label="Workspace" className="no-print md:hidden flex flex-col bg-ll-sidebar px-3 pt-1 pb-4">
+            <nav id="workspace-mobile-nav" aria-label={t("Workspace")} className="no-print md:hidden flex flex-col bg-ll-sidebar px-3 pt-1 pb-4">
               {sidebarTop}
               <QuickNew onNavigate={() => setOpen(false)} />
               <NavItems onNavigate={() => setOpen(false)} />
               <div className="mt-6 flex flex-col gap-3">
                 <SyncBadge />
                 {account}
+                <LanguageSwitch className="mx-3 self-start" />
               </div>
             </nav>
           )}

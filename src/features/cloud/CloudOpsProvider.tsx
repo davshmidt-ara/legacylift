@@ -136,17 +136,17 @@ export function CloudOpsProvider({ children }: { children: ReactNode }) {
   const loadExampleClients = useCallback(() => {
     void (async () => {
       const make = (c: Omit<NewClient, "owner">) => addClient({ ...c, owner: author });
-      const hartmann = await make({ firmName: "Hartmann & Söhne Joinery (example)", contactName: "Klaus Hartmann", email: "", phone: SAMPLE_PROFILE.phone, industry: "Joinery", city: "Köln", package: "suite", stage: "active", notes: "Example client. Delete when you start for real." });
-      await make({ firmName: "Bäckerei Lindner (example)", contactName: "Maria Lindner", email: "", phone: "", industry: "Bakery, 3 shops", city: "Berlin", package: "start", stage: "onboarding", notes: "Example client." });
-      await make({ firmName: "Druckerei Voss & Co. (example)", contactName: "Peter Voss", email: "", phone: "", industry: "Print shop", city: "Hamburg", package: "partner", stage: "lead", notes: "Example client." });
-      await replaceWorkspace(hartmann.id, {
+      const joinery = await make({ firmName: `${SAMPLE_PROFILE.businessName} (example)`, contactName: SAMPLE_PROFILE.ownerName, email: "", phone: SAMPLE_PROFILE.phone, industry: "Joinery", city: "Rīga", package: "suite", stage: "active", notes: "Example client. Delete when you start for real." });
+      await make({ firmName: "Maiznīca Saulīte (example)", contactName: "Marija Saule", email: "", phone: "", industry: "Bakery, 3 shops", city: "Liepāja", package: "start", stage: "onboarding", notes: "Example client." });
+      await make({ firmName: "Tipogrāfija Kurzeme (example)", contactName: "Pēteris Vītols", email: "", phone: "", industry: "Print shop", city: "Ventspils", package: "partner", stage: "lead", notes: "Example client." });
+      await replaceWorkspace(joinery.id, {
         ...EMPTY_STATE,
-        profile: { ...SAMPLE_PROFILE, businessName: hartmann.firmName },
+        profile: { ...SAMPLE_PROFILE, businessName: joinery.firmName },
         ...buildSampleData(newId),
         records: SAMPLE_RECORDS.map((r) => toRecord(r, "sample")),
       });
-      await api.setTaskDone(hartmann.id, "kickoff", true);
-      await api.setTaskDone(hartmann.id, "training", true);
+      await api.setTaskDone(joinery.id, "kickoff", true);
+      await api.setTaskDone(joinery.id, "training", true);
       await refresh();
     })().catch(report);
   }, [addClient, author, replaceWorkspace, refresh]);

@@ -5,20 +5,22 @@ import { toast } from "sonner";
 import { writeDraft } from "../ai";
 import { useWorkspace } from "../store";
 import { DemoNotice, PageHeader, Panel, btnGhost, btnPrimary, fieldClass } from "../components";
+import { msg, useT } from "@/i18n";
 
 const TEMPLATES = [
-  { label: "Payment reminder", kind: "email", audience: "customer", notes: "Friendly reminder that invoice #1047 (€8,450) was due on 13 September. Offer bank transfer or card payment link." },
-  { label: "Quote", kind: "quote letter", audience: "customer", notes: "Quote for a built-in oak wardrobe, 2.4m wide, delivery in 6 weeks, €4,800 incl. installation. Valid 30 days." },
-  { label: "Reply to enquiry", kind: "email", audience: "prospective customer", notes: "Thank them for the enquiry about a staircase, ask for measurements and photos, propose a site visit next week." },
-  { label: "Supplier request", kind: "email", audience: "supplier", notes: "Ask for updated prices on kiln-dried oak and beech for Q4 and whether delivery can move to Tuesdays." },
-  { label: "Announce going digital", kind: "letter", audience: "long-standing customers", notes: "We now send invoices by email and accept online payment. Paper invoices still available on request. Thank them for their loyalty." },
+  { label: msg("Payment reminder"), kind: "email", audience: msg("customer"), notes: msg("Friendly reminder that invoice #1047 (€8,450) was due on 13 September. Offer bank transfer or card payment link.") },
+  { label: msg("Quote"), kind: "quote letter", audience: msg("customer"), notes: msg("Quote for a built-in oak wardrobe, 2.4m wide, delivery in 6 weeks, €4,800 incl. installation. Valid 30 days.") },
+  { label: msg("Reply to enquiry"), kind: "email", audience: msg("prospective customer"), notes: msg("Thank them for the enquiry about a staircase, ask for measurements and photos, propose a site visit next week.") },
+  { label: msg("Supplier request"), kind: "email", audience: msg("supplier"), notes: msg("Ask for updated prices on kiln-dried oak and beech for Q4 and whether delivery can move to Tuesdays.") },
+  { label: msg("Announce going digital"), kind: "letter", audience: msg("long-standing customers"), notes: msg("We now send invoices by email and accept online payment. Paper invoices still available on request. Thank them for their loyalty.") },
 ];
 
 const Writer = () => {
+  const t = useT();
   const { state } = useWorkspace();
   const location = useLocation();
   const prefill = location.state as { kind?: string; audience?: string; tone?: string; notes?: string } | null;
-  const [form, setForm] = useState({ kind: "email", audience: "customer", tone: "friendly", notes: "", ...(prefill ?? {}) });
+  const [form, setForm] = useState({ kind: "email", audience: t("customer"), tone: "friendly", notes: "", ...(prefill ?? {}) });
   const [output, setOutput] = useState("");
   const [busy, setBusy] = useState(false);
   const [demo, setDemo] = useState(false);
@@ -30,7 +32,7 @@ const Writer = () => {
       setOutput(value);
       setDemo(isDemo);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "The draft couldn't be written. Please try again.");
+      toast.error(err instanceof Error ? err.message : t("The draft couldn't be written. Please try again."));
     } finally {
       setBusy(false);
     }
@@ -40,19 +42,19 @@ const Writer = () => {
     <div className="max-w-5xl">
       <PageHeader
         eyebrow="AI"
-        title="AI writer"
-        description="Describe what you want to say in a few words — AI writes the email, letter or quote in a professional voice. Always read it before sending."
+        title={t("AI writer")}
+        description={t("Describe what you want to say in a few words — AI writes the email, letter or quote in a professional voice. Always read it before sending.")}
       />
 
       <div className="flex flex-wrap gap-2 mb-4">
-        {TEMPLATES.map((t) => (
+        {TEMPLATES.map((tpl) => (
           <button
-            key={t.label}
+            key={tpl.label}
             type="button"
             className={btnGhost}
-            onClick={() => setForm((f) => ({ ...f, kind: t.kind, audience: t.audience, notes: t.notes }))}
+            onClick={() => setForm((f) => ({ ...f, kind: tpl.kind, audience: t(tpl.audience), notes: t(tpl.notes) }))}
           >
-            {t.label}
+            {t(tpl.label)}
           </button>
         ))}
       </div>
@@ -68,32 +70,36 @@ const Writer = () => {
           >
             <div className="grid gap-3 sm:grid-cols-3">
               <label className="text-xs text-muted-foreground">
-                Type
+                {t("Type")}
                 <select className={fieldClass} value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
                   {["email", "letter", "quote letter", "social media post", "website text"].map((k) => (
-                    <option key={k}>{k}</option>
+                    <option key={k} value={k}>
+                      {t(k)}
+                    </option>
                   ))}
                 </select>
               </label>
               <label className="text-xs text-muted-foreground">
-                For
+                {t("For")}
                 <input className={fieldClass} value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value })} />
               </label>
               <label className="text-xs text-muted-foreground">
-                Tone
+                {t("Tone")}
                 <select className={fieldClass} value={form.tone} onChange={(e) => setForm({ ...form, tone: e.target.value })}>
-                  {["friendly", "formal", "firm but polite", "warm and personal"].map((t) => (
-                    <option key={t}>{t}</option>
+                  {["friendly", "formal", "firm but polite", "warm and personal"].map((tone) => (
+                    <option key={tone} value={tone}>
+                      {t(tone)}
+                    </option>
                   ))}
                 </select>
               </label>
             </div>
             <label className="text-xs text-muted-foreground">
-              What should it say?
+              {t("What should it say?")}
               <textarea
                 rows={8}
                 className={fieldClass}
-                placeholder="Key points, names, amounts, dates…"
+                placeholder={t("Key points, names, amounts, dates…")}
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
               />
@@ -101,7 +107,7 @@ const Writer = () => {
             <div>
               <button type="submit" className={btnPrimary} disabled={busy || !form.notes.trim()}>
                 {busy ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <PenLine size={16} aria-hidden="true" />}
-                {busy ? "Writing…" : "Write it"}
+                {busy ? t("Writing…") : t("Write it")}
               </button>
             </div>
           </form>
@@ -109,31 +115,31 @@ const Writer = () => {
 
         <Panel className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h2 className="font-heading font-semibold">Draft</h2>
+            <h2 className="font-heading font-semibold">{t("Draft")}</h2>
             <button
               type="button"
               className={btnGhost}
               disabled={!output}
               onClick={() =>
                 navigator.clipboard.writeText(output).then(
-                  () => toast.success("Copied"),
-                  () => toast.error("Copy was blocked. Select the text and copy it manually."),
+                  () => toast.success(t("Copied")),
+                  () => toast.error(t("Copy was blocked — select the text and copy it manually.")),
                 )
               }
             >
-              <Copy size={16} aria-hidden="true" /> Copy
+              <Copy size={16} aria-hidden="true" /> {t("Copy")}
             </button>
           </div>
           <DemoNotice show={demo} />
           <label htmlFor="draft-output" className="sr-only">
-            Generated draft
+            {t("Generated draft")}
           </label>
           <textarea
             id="draft-output"
             rows={14}
             className={`${fieldClass} flex-1 font-body`}
             value={output}
-            placeholder="Your draft will appear here. You can edit it before copying."
+            placeholder={t("Your draft will appear here. You can edit it before copying.")}
             onChange={(e) => setOutput(e.target.value)}
           />
         </Panel>

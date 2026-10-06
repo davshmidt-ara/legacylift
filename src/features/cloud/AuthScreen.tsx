@@ -2,6 +2,8 @@ import { useState, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "./auth";
 import { btnGhost, btnPrimary, fieldClass, labelClass, linkClass } from "@/features/digital/components";
+import { useT } from "@/i18n";
+import { LanguageSwitch } from "@/i18n/LanguageSwitch";
 
 type Mode = "signin" | "signup" | "reset";
 
@@ -9,11 +11,12 @@ type Mode = "signin" | "signup" | "reset";
 export function AuthFrame({ eyebrow, title, children }: { eyebrow: string; title: string; children: ReactNode }) {
   return (
     <div className="theme-legacylift min-h-screen flex flex-col">
-      <header className="bg-ll-sidebar px-4 py-4 sm:px-8">
+      <header className="bg-ll-sidebar px-4 py-4 sm:px-8 flex items-center justify-between gap-4">
         <span className="flex items-center gap-2 font-heading text-xl font-extrabold text-ll-sidebar-foreground">
           <span className="inline-block h-5 w-5 rounded-sm bg-ll-highlight" aria-hidden="true" />
           LegacyLift
         </span>
+        <LanguageSwitch />
       </header>
       <main className="flex-1 flex items-start justify-center px-4 py-10 sm:py-16">
         <div className="w-full max-w-md">
@@ -38,6 +41,7 @@ export function AuthScreen({
   /** Offer to continue without an account (data stays on this device). */
   deviceOption?: { label: string; onChoose: () => void };
 }) {
+  const t = useT();
   const auth = useAuth();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
@@ -58,17 +62,17 @@ export function AuthScreen({
       if (mode === "signup") {
         const mustConfirm = await auth.signUp(email, password);
         if (mustConfirm) {
-          setMessage(`We sent a confirmation link to ${email.trim()}. Open it, then sign in here.`);
+          setMessage(t("We sent a confirmation link to {email}. Open it, then sign in here.", { email: email.trim() }));
           setMode("signin");
         }
       }
       if (mode === "reset") {
         await auth.sendPasswordReset(email);
-        setMessage(`If ${email.trim()} has an account, a link to choose a new password is on its way.`);
+        setMessage(t("If {email} has an account, a link to choose a new password is on its way.", { email: email.trim() }));
         setMode("signin");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setError(err instanceof Error ? err.message : t("Something went wrong. Please try again."));
     } finally {
       setBusy(false);
     }
@@ -94,12 +98,12 @@ export function AuthScreen({
       {intro && <p className="text-sm text-muted-foreground mb-6 -mt-3">{intro}</p>}
       <div className="rounded-lg border border-border bg-card p-6 flex flex-col gap-4">
         {mode !== "reset" && (
-          <div role="tablist" aria-label="Account" className="flex gap-1 rounded-md border border-border p-1">
-            {tab("signin", "Sign in")}
-            {tab("signup", "Create account")}
+          <div role="tablist" aria-label={t("Account")} className="flex gap-1 rounded-md border border-border p-1">
+            {tab("signin", t("Sign in"))}
+            {tab("signup", t("Create account"))}
           </div>
         )}
-        {mode === "reset" && <p className="text-sm">Enter your email and we'll send you a link to choose a new password.</p>}
+        {mode === "reset" && <p className="text-sm">{t("Enter your email and we'll send you a link to choose a new password.")}</p>}
         {message && (
           <p role="status" className="rounded-md bg-ll-success/10 border border-ll-success/40 px-3 py-2 text-sm">
             {message}
@@ -107,12 +111,12 @@ export function AuthScreen({
         )}
         <form className="flex flex-col gap-3" onSubmit={submit}>
           <label className={labelClass}>
-            Email
+            {t("Email")}
             <input id="auth-email" type="email" required autoComplete="email" className={fieldClass} value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
           {mode !== "reset" && (
             <label className={labelClass}>
-              Password{mode === "signup" && " (at least 8 characters)"}
+              {mode === "signup" ? t("Password (at least 8 characters)") : t("Password")}
               <input
                 id="auth-password"
                 type="password"
@@ -132,23 +136,23 @@ export function AuthScreen({
           )}
           <button type="submit" className={btnPrimary} disabled={busy}>
             {busy && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
-            {mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
+            {mode === "signin" ? t("Sign in") : mode === "signup" ? t("Create account") : t("Send reset link")}
           </button>
         </form>
         {mode === "signin" && (
           <button type="button" className={`${linkClass} self-start text-sm`} onClick={() => setMode("reset")}>
-            Forgot your password?
+            {t("Forgot your password?")}
           </button>
         )}
         {mode === "reset" && (
           <button type="button" className={`${linkClass} self-start text-sm`} onClick={() => setMode("signin")}>
-            Back to sign in
+            {t("Back to sign in")}
           </button>
         )}
       </div>
       {deviceOption && (
         <div className="mt-6 flex flex-col gap-2 text-sm text-muted-foreground">
-          <span>Just looking?</span>
+          <span>{t("Just looking?")}</span>
           <button type="button" className={`${btnGhost} self-start`} onClick={deviceOption.onChoose}>
             {deviceOption.label}
           </button>
@@ -159,12 +163,13 @@ export function AuthScreen({
 }
 
 function NewPassword() {
+  const t = useT();
   const auth = useAuth();
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   return (
-    <AuthFrame eyebrow="Account" title="Choose a new password">
+    <AuthFrame eyebrow={t("Account")} title={t("Choose a new password")}>
       <form
         className="rounded-lg border border-border bg-card p-6 flex flex-col gap-3"
         onSubmit={async (e) => {
@@ -174,14 +179,14 @@ function NewPassword() {
           try {
             await auth.setNewPassword(password);
           } catch (err) {
-            setError(err instanceof Error ? err.message : "Couldn't change the password.");
+            setError(err instanceof Error ? err.message : t("Couldn't change the password."));
           } finally {
             setBusy(false);
           }
         }}
       >
         <label className={labelClass}>
-          New password (at least 8 characters)
+          {t("New password (at least 8 characters)")}
           <input id="new-password" type="password" required minLength={8} autoComplete="new-password" className={fieldClass} value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
         {error && (
@@ -190,7 +195,7 @@ function NewPassword() {
           </p>
         )}
         <button type="submit" className={btnPrimary} disabled={busy}>
-          Save new password
+          {t("Save new password")}
         </button>
       </form>
     </AuthFrame>
@@ -198,11 +203,12 @@ function NewPassword() {
 }
 
 /** Spinner shown while the saved session is checked. */
-export function AuthLoading({ text = "Checking your account…" }: { text?: string }) {
+export function AuthLoading({ text }: { text?: string }) {
+  const t = useT();
   return (
     <div className="theme-legacylift min-h-screen flex items-center justify-center">
       <p role="status" className="flex items-center gap-2 text-muted-foreground">
-        <Loader2 className="animate-spin" size={18} aria-hidden="true" /> {text}
+        <Loader2 className="animate-spin" size={18} aria-hidden="true" /> {text ?? t("Checking your account…")}
       </p>
     </div>
   );

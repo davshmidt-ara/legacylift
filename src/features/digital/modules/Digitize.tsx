@@ -5,7 +5,8 @@ import { extractDocument, fileToAttachment, isVisualFile } from "../ai";
 import { newId, toRecord, useWorkspace } from "../store";
 import { addDays, markedPaid, nextNumber, round2, todayIso } from "../finance";
 import { DOC_TYPES, type ExtractedRecord, type Invoice } from "../types";
-import { DemoNotice, PageHeader, Panel, btnGhost, btnPrimary, fieldClass } from "../components";
+import { DOC_TYPE_LABEL, DemoNotice, PageHeader, Panel, btnGhost, btnPrimary, fieldClass } from "../components";
+import { useT } from "@/i18n";
 
 const MAX_BYTES = 8 * 1024 * 1024;
 
@@ -20,6 +21,7 @@ interface Pending {
 }
 
 const Digitize = () => {
+  const t = useT();
   const { state, upsert } = useWorkspace();
   const [alsoCustomer, setAlsoCustomer] = useState<Record<string, boolean>>({});
   const [alsoInvoice, setAlsoInvoice] = useState<Record<string, boolean>>({});
@@ -39,7 +41,7 @@ const Digitize = () => {
       const { value, demo } = await extractDocument({ ...input, fileName: source, businessName: state.profile.businessName });
       patch(key, { status: "ready", record: value, demo });
     } catch (err) {
-      patch(key, { status: "error", error: err instanceof Error ? err.message : "Could not read this file" });
+      patch(key, { status: "error", error: err instanceof Error ? err.message : t("Could not read this file") });
     }
   }
 
@@ -47,7 +49,7 @@ const Digitize = () => {
     if (!files) return;
     for (const file of Array.from(files)) {
       if (file.size > MAX_BYTES) {
-        toast.error(`${file.name} is larger than 8 MB`);
+        toast.error(t("{name} is larger than 8 MB", { name: file.name }));
         continue;
       }
       if (isVisualFile(file)) {
@@ -56,7 +58,7 @@ const Digitize = () => {
       } else if (file.type.startsWith("text/") || /\.(txt|csv|md|tsv)$/i.test(file.name)) {
         process(file.name, async () => ({ text: await file.text() }));
       } else {
-        toast.error(`${file.name}: use a photo, PDF or text file`);
+        toast.error(t("{name}: use a photo, PDF or text file", { name: file.name }));
       }
     }
   }
@@ -65,7 +67,7 @@ const Digitize = () => {
     if (!item.record) return;
     const rec = item.record;
     upsert("records", toRecord(rec, item.source));
-    const done: string[] = ["archived"];
+    const done: string[] = [t("archived")];
     let customerId = state.customers.find((c) => rec.party && (c.company || c.name).toLowerCase() === rec.party.toLowerCase())?.id;
     const wantCustomer = alsoCustomer[item.key] ?? rec.docType === "customer";
     if (wantCustomer && rec.party && !customerId) {
@@ -76,12 +78,12 @@ const Digitize = () => {
         name: rec.party,
         company: "",
         email: get(/mail/i),
-        phone: get(/phone|tel|mobile/i),
-        address: get(/address|adresse|street/i),
+        phone: get(/phone|tel|mobile|tālr|mob/i),
+        address: get(/address|adresse|street|adrese|iela/i),
         notes: rec.summary,
         createdAt: new Date().toISOString(),
       });
-      done.push("customer added");
+      done.push(t("customer added"));
     }
     if (alsoInvoice[item.key] && rec.docType === "invoice" && customerId) {
       const issue = rec.date || todayIso();
@@ -93,7 +95,7 @@ const Digitize = () => {
             return { id: newId(), description: l.description, quantity, unitPrice };
           })
         : [{ id: newId(), description: rec.title, quantity: 1, unitPrice: rec.amount ?? 0 }];
-      const numberField = rec.fields.find((f) => /invoice (no|number|#)|rechnungs/i.test(f.label))?.value;
+      const numberField = rec.fields.find((f) => /invoice (no|number|#)|rechnungs|rēķin/i.test(f.label))?.value;
       const inv: Invoice = {
         id: newId(),
         kind: "invoice",
@@ -103,14 +105,14 @@ const Digitize = () => {
         dueDate: addDays(issue, state.profile.paymentTermsDays || 14),
         items,
         taxRate: 0, // amounts from paper are taken as gross
-        notes: `Digitized from ${item.source}`,
+        notes: t("Digitized from {source}", { source: item.source }),
         status: markedPaid(rec.tags) ? "paid" : "sent",
         paidAt: markedPaid(rec.tags) ? issue : undefined,
         stockDeducted: true,
         createdAt: new Date().toISOString(),
       };
       upsert("invoices", inv);
-      done.push("added to invoices");
+      done.push(t("added to invoices"));
     }
     setQueue((q) => q.filter((i) => i.key !== item.key));
     toast.success(`“${rec.title}”: ${done.join(", ")}`);
@@ -122,13 +124,13 @@ const Digitize = () => {
     <div className="max-w-5xl">
       <PageHeader
         eyebrow="AI"
-        title="Digitize documents"
-        description="Photograph or upload paper invoices, orders, delivery notes, contracts or customer cards. AI reads them — including handwriting — and turns them into searchable records you can check before saving."
+        title={t("Digitize documents")}
+        description={t("Photograph or upload paper invoices, orders, delivery notes, contracts or customer cards. AI reads them — including handwriting — and turns them into searchable records you can check before saving.")}
       />
 
       <div className="grid gap-4 md:grid-cols-2 mb-8">
         <Panel>
-          <h2 className="font-heading font-semibold mb-3">Upload or photograph</h2>
+          <h2 className="font-heading font-semibold mb-3">{t("Upload or photograph")}</h2>
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
@@ -138,13 +140,13 @@ const Digitize = () => {
             className="rounded-md border-2 border-dashed border-border p-6 text-center"
           >
             <FileUp className="mx-auto text-primary mb-2" size={28} aria-hidden="true" />
-            <p className="text-sm text-muted-foreground mb-4">Drop photos, scans (PDF) or text files here</p>
+            <p className="text-sm text-muted-foreground mb-4">{t("Drop photos, scans (PDF) or text files here")}</p>
             <div className="flex flex-wrap justify-center gap-2">
               <button type="button" className={btnPrimary} onClick={() => fileRef.current?.click()}>
-                <FileUp size={16} aria-hidden="true" /> Choose files
+                <FileUp size={16} aria-hidden="true" /> {t("Choose files")}
               </button>
               <button type="button" className={btnGhost} onClick={() => cameraRef.current?.click()}>
-                <Camera size={16} aria-hidden="true" /> Take photo
+                <Camera size={16} aria-hidden="true" /> {t("Take photo")}
               </button>
             </div>
             <input
@@ -153,7 +155,7 @@ const Digitize = () => {
               multiple
               accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,text/csv,.txt,.csv,.md"
               className="sr-only"
-              aria-label="Choose files to digitize"
+              aria-label={t("Choose files to digitize")}
               onChange={(e) => {
                 handleFiles(e.target.files);
                 e.target.value = "";
@@ -165,7 +167,7 @@ const Digitize = () => {
               accept="image/*"
               capture="environment"
               className="sr-only"
-              aria-label="Take a photo of a document"
+              aria-label={t("Take a photo of a document")}
               onChange={(e) => {
                 handleFiles(e.target.files);
                 e.target.value = "";
@@ -176,13 +178,13 @@ const Digitize = () => {
 
         <Panel>
           <label htmlFor="paste-text" className="block font-heading font-semibold mb-3">
-            Or paste text
+            {t("Or paste text")}
           </label>
           <textarea
             id="paste-text"
             rows={7}
             className={fieldClass}
-            placeholder={"Paste an email, a typed-up ledger page, an old spreadsheet row…"}
+            placeholder={t("Paste an email, a typed-up ledger page, an old spreadsheet row…")}
             value={pasted}
             onChange={(e) => setPasted(e.target.value)}
           />
@@ -193,15 +195,15 @@ const Digitize = () => {
             onClick={() => {
               const text = pasted;
               setPasted("");
-              process("pasted text", async () => ({ text }));
+              process(t("pasted text"), async () => ({ text }));
             }}
           >
-            <Wand2 size={16} aria-hidden="true" /> Extract with AI
+            <Wand2 size={16} aria-hidden="true" /> {t("Extract with AI")}
           </button>
         </Panel>
       </div>
 
-      {queue.length > 0 && <h2 className="font-heading text-lg font-semibold mb-3">Review before saving</h2>}
+      {queue.length > 0 && <h2 className="font-heading text-lg font-semibold mb-3">{t("Review before saving")}</h2>}
       <div className="flex flex-col gap-4">
         {queue.map((item) => (
           <Panel key={item.key}>
@@ -210,7 +212,7 @@ const Digitize = () => {
               <button
                 type="button"
                 className={btnGhost}
-                aria-label={`Discard ${item.source}`}
+                aria-label={t("Discard {name}", { name: item.source })}
                 onClick={() => setQueue((q) => q.filter((i) => i.key !== item.key))}
               >
                 <Trash2 size={16} aria-hidden="true" />
@@ -219,7 +221,7 @@ const Digitize = () => {
 
             {item.status === "working" && (
               <p className="flex items-center gap-2 text-sm text-muted-foreground" role="status">
-                <Loader2 className="animate-spin" size={16} aria-hidden="true" /> Reading document…
+                <Loader2 className="animate-spin" size={16} aria-hidden="true" /> {t("Reading document…")}
               </p>
             )}
             {item.status === "error" && <p className="text-sm text-destructive">{item.error}</p>}
@@ -227,7 +229,7 @@ const Digitize = () => {
             {item.status === "ready" && item.record && (
               <div className="grid gap-4 md:grid-cols-[160px_1fr]">
                 {item.preview ? (
-                  <img src={item.preview} alt={`Preview of ${item.source}`} className="rounded-md border border-border max-h-56 object-contain w-full" />
+                  <img src={item.preview} alt={t("Preview of {name}", { name: item.source })} className="rounded-md border border-border max-h-56 object-contain w-full" />
                 ) : (
                   <div className="hidden md:block" />
                 )}
@@ -235,33 +237,33 @@ const Digitize = () => {
                   <DemoNotice show={!!item.demo} />
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="text-xs text-muted-foreground">
-                      Title
+                      {t("Title")}
                       <input className={fieldClass} value={item.record.title} onChange={(e) => editRecord(item.key, item.record!, { title: e.target.value })} />
                     </label>
                     <label className="text-xs text-muted-foreground">
-                      Type
+                      {t("Type")}
                       <select
                         className={fieldClass}
                         value={item.record.docType}
                         onChange={(e) => editRecord(item.key, item.record!, { docType: e.target.value as ExtractedRecord["docType"] })}
                       >
-                        {DOC_TYPES.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
+                        {DOC_TYPES.map((d) => (
+                          <option key={d} value={d}>
+                            {t(DOC_TYPE_LABEL[d])}
                           </option>
                         ))}
                       </select>
                     </label>
                     <label className="text-xs text-muted-foreground">
-                      Customer / supplier
+                      {t("Customer / supplier")}
                       <input className={fieldClass} value={item.record.party} onChange={(e) => editRecord(item.key, item.record!, { party: e.target.value })} />
                     </label>
                     <label className="text-xs text-muted-foreground">
-                      Date
+                      {t("Date")}
                       <input type="date" className={fieldClass} value={item.record.date} onChange={(e) => editRecord(item.key, item.record!, { date: e.target.value })} />
                     </label>
                     <label className="text-xs text-muted-foreground">
-                      Amount
+                      {t("Amount")}
                       <input
                         type="number"
                         step="0.01"
@@ -271,12 +273,12 @@ const Digitize = () => {
                       />
                     </label>
                     <label className="text-xs text-muted-foreground">
-                      Currency
+                      {t("Currency")}
                       <input className={fieldClass} value={item.record.currency} onChange={(e) => editRecord(item.key, item.record!, { currency: e.target.value.toUpperCase() })} />
                     </label>
                   </div>
                   <label className="text-xs text-muted-foreground">
-                    Summary
+                    {t("Summary")}
                     <textarea rows={2} className={fieldClass} value={item.record.summary} onChange={(e) => editRecord(item.key, item.record!, { summary: e.target.value })} />
                   </label>
                   {item.record.fields.length > 0 && (
@@ -290,10 +292,10 @@ const Digitize = () => {
                     </dl>
                   )}
                   {item.record.lineItems.length > 0 && (
-                    <p className="text-xs text-muted-foreground">{item.record.lineItems.length} line item(s) detected</p>
+                    <p className="text-xs text-muted-foreground">{t("Lines found: {n}", { n: item.record.lineItems.length })}</p>
                   )}
                   <fieldset className="flex flex-col gap-2 text-sm">
-                    <legend className="sr-only">Also create</legend>
+                    <legend className="sr-only">{t("Also create")}</legend>
                     {item.record.party && !state.customers.some((c) => (c.company || c.name).toLowerCase() === item.record!.party.toLowerCase()) && (
                       <label className="inline-flex items-center gap-2">
                         <input
@@ -303,7 +305,7 @@ const Digitize = () => {
                           checked={alsoCustomer[item.key] ?? item.record.docType === "customer"}
                           onChange={(e) => setAlsoCustomer({ ...alsoCustomer, [item.key]: e.target.checked })}
                         />
-                        Add “{item.record.party}” to customers
+                        {t("Add “{name}” to customers", { name: item.record.party })}
                       </label>
                     )}
                     {item.record.docType === "invoice" && item.record.party && (
@@ -318,13 +320,13 @@ const Digitize = () => {
                             if (e.target.checked) setAlsoCustomer({ ...alsoCustomer, [item.key]: true });
                           }}
                         />
-                        Also add to Invoices so it's tracked for payment
+                        {t("Also add to Invoices so it's tracked for payment")}
                       </label>
                     )}
                   </fieldset>
                   <div>
                     <button type="button" className={btnPrimary} onClick={() => save(item)}>
-                      <Check size={16} aria-hidden="true" /> Save record
+                      <Check size={16} aria-hidden="true" /> {t("Save record")}
                     </button>
                   </div>
                 </div>

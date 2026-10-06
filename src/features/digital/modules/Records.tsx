@@ -4,9 +4,11 @@ import { CheckCircle2, CircleDot, Download, Search, Trash2 } from "lucide-react"
 import { recordsToCsv, useWorkspace } from "../store";
 import { useBase } from "../base";
 import { DOC_TYPES } from "../types";
-import { ConfirmDelete, PageHeader, Panel, btnGhost, download, fieldClass, formatMoney } from "../components";
+import { ConfirmDelete, DOC_TYPE_LABEL, PageHeader, Panel, btnGhost, download, fieldClass, formatDate, formatMoney } from "../components";
+import { useT } from "@/i18n";
 
 const Records = () => {
+  const t = useT();
   const { state, patchItem, remove } = useWorkspace();
   const base = useBase();
   const [query, setQuery] = useState("");
@@ -28,9 +30,9 @@ const Records = () => {
   return (
     <div className="max-w-6xl">
       <PageHeader
-        eyebrow="Archive"
-        title="Documents"
-        description="Every paper document you've digitized — contracts, supplier orders, old invoices — searchable in one place. Export to CSV for Excel or your accountant."
+        eyebrow={t("Archive")}
+        title={t("Documents")}
+        description={t("Every paper document you've digitized — contracts, supplier orders, old invoices — searchable in one place. Export to CSV for Excel or your accountant.")}
         actions={
           <>
             <button
@@ -47,7 +49,7 @@ const Records = () => {
               disabled={!state.records.length}
               onClick={() => download("legacylift-backup.json", JSON.stringify(state, null, 2), "application/json")}
             >
-              <Download size={16} aria-hidden="true" /> Full backup
+              <Download size={16} aria-hidden="true" /> {t("Full backup")}
             </button>
           </>
         }
@@ -57,18 +59,18 @@ const Records = () => {
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <input
-            aria-label="Search records"
+            aria-label={t("Search records")}
             className={`${fieldClass} pl-9`}
-            placeholder="Search names, amounts, notes…"
+            placeholder={t("Search names, amounts, notes…")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <select aria-label="Filter by type" className={`${fieldClass} sm:w-44`} value={type} onChange={(e) => setType(e.target.value)}>
-          <option value="all">All types</option>
-          {DOC_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
+        <select aria-label={t("Filter by type")} className={`${fieldClass} sm:w-44`} value={type} onChange={(e) => setType(e.target.value)}>
+          <option value="all">{t("All types")}</option>
+          {DOC_TYPES.map((d) => (
+            <option key={d} value={d}>
+              {t(DOC_TYPE_LABEL[d])}
             </option>
           ))}
         </select>
@@ -77,7 +79,10 @@ const Records = () => {
       {state.records.length === 0 ? (
         <Panel>
           <p className="text-sm text-muted-foreground">
-            No records yet. <Link to={`${base}/digitize`} className="text-primary underline">Digitize your first document</Link>.
+            {t("No records yet.")}{" "}
+            <Link to={`${base}/digitize`} className="text-primary underline">
+              {t("Digitize your first document")}
+            </Link>
           </p>
         </Panel>
       ) : (
@@ -87,7 +92,7 @@ const Records = () => {
               <div className="flex items-center gap-3 p-4">
                 <button
                   type="button"
-                  aria-label={r.status === "done" ? "Mark as open" : "Mark as done"}
+                  aria-label={r.status === "done" ? t("Mark as open") : t("Mark as done")}
                   className="shrink-0 min-h-11 min-w-11 inline-flex items-center justify-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   onClick={() => patchItem("records", r.id, { status: r.status === "done" ? "open" : "done" })}
                 >
@@ -105,13 +110,13 @@ const Records = () => {
                 >
                   <p className="font-semibold truncate">{r.title}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    <span className="uppercase tracking-wide">{r.docType}</span>
+                    <span className="uppercase tracking-wide">{t(DOC_TYPE_LABEL[r.docType] ?? r.docType)}</span>
                     {r.party && ` · ${r.party}`}
-                    {r.date && ` · ${r.date}`}
+                    {r.date && ` · ${formatDate(r.date)}`}
                   </p>
                 </button>
                 <p className="hidden sm:block font-mono tabular-nums whitespace-nowrap">{formatMoney(r.amount, r.currency)}</p>
-                <ConfirmDelete label={`Delete ${r.title}`} onConfirm={() => remove("records", r.id)}>
+                <ConfirmDelete label={t("Delete {name}", { name: r.title })} onConfirm={() => remove("records", r.id)}>
                   <Trash2 size={16} aria-hidden="true" />
                 </ConfirmDelete>
               </div>
@@ -134,10 +139,10 @@ const Records = () => {
                       <table className="w-full text-left text-xs">
                         <thead className="text-muted-foreground">
                           <tr>
-                            <th className="py-1 pr-3 font-normal">Item</th>
-                            <th className="py-1 pr-3 font-normal">Qty</th>
-                            <th className="py-1 pr-3 font-normal">Unit</th>
-                            <th className="py-1 font-normal">Total</th>
+                            <th className="py-1 pr-3 font-normal">{t("Item")}</th>
+                            <th className="py-1 pr-3 font-normal">{t("Qty")}</th>
+                            <th className="py-1 pr-3 font-normal">{t("Unit price")}</th>
+                            <th className="py-1 font-normal">{t("Total")}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -154,18 +159,18 @@ const Records = () => {
                     </div>
                   )}
                   <div className="flex flex-wrap gap-1">
-                    {r.tags.map((t) => (
-                      <span key={t} className="rounded-full bg-secondary px-2 py-0.5 text-xs">
-                        {t}
+                    {r.tags.map((tag) => (
+                      <span key={tag} className="rounded-full bg-secondary px-2 py-0.5 text-xs">
+                        {tag}
                       </span>
                     ))}
-                    <span className="text-xs text-muted-foreground ml-auto">Source: {r.source}</span>
+                    <span className="text-xs text-muted-foreground ml-auto">{t("Source: {source}", { source: r.source })}</span>
                   </div>
                 </div>
               )}
             </li>
           ))}
-          {filtered.length === 0 && <p className="text-sm text-muted-foreground">No records match your search.</p>}
+          {filtered.length === 0 && <p className="text-sm text-muted-foreground">{t("No records match your search.")}</p>}
         </ul>
       )}
     </div>

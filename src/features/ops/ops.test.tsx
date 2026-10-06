@@ -82,15 +82,15 @@ describe("operations console", () => {
     renderAt("/internal");
     fireEvent.click(screen.getByRole("button", { name: /load example clients/i }));
     expect(screen.getByRole("heading", { name: "Operations" })).toBeInTheDocument();
-    expect(screen.getAllByText("Hartmann & Söhne Joinery").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("SIA Kalniņa Galdniecība").length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole("link", { name: /^clients$/i }));
-    fireEvent.click(screen.getByRole("link", { name: "Hartmann & Söhne Joinery" }));
+    fireEvent.click(screen.getByRole("link", { name: "SIA Kalniņa Galdniecība" }));
     expect(screen.getByRole("heading", { name: "Service checklist" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("link", { name: /open workspace/i }));
     expect(screen.getByText(/working on behalf of/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1, name: "Hartmann & Söhne Joinery" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "SIA Kalniņa Galdniecība" })).toBeInTheDocument();
   });
 
   it("keeps each client's data in its own workspace", async () => {

@@ -68,7 +68,7 @@ describe("invoice maths", () => {
 
   it("continues numbering from the highest number of the year", () => {
     expect(nextNumber(sample.invoices, "invoice", SAMPLE_PROFILE, TODAY)).toBe("RE-2026-0048");
-    expect(nextNumber(sample.invoices, "quote", SAMPLE_PROFILE, TODAY)).toBe("AN-2026-0020");
+    expect(nextNumber(sample.invoices, "quote", SAMPLE_PROFILE, TODAY)).toBe("PD-2026-0020");
     expect(nextNumber(sample.invoices, "invoice", SAMPLE_PROFILE, "2027-01-02")).toBe("RE-2027-0001");
   });
 
@@ -164,7 +164,7 @@ describe("workspace UI", () => {
     localStorage.clear();
     renderAt("/app");
     fireEvent.click(screen.getByRole("button", { name: /load example business/i }));
-    expect(screen.getByRole("heading", { name: /hartmann & söhne joinery/i, level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /sia kalniņa galdniecība/i, level: 1 })).toBeInTheDocument();
     expect(screen.getByText(/days overdue/i)).toBeInTheDocument();
   });
 
@@ -178,7 +178,7 @@ describe("workspace UI", () => {
     fireEvent.change(screen.getByLabelText(/line 1 unit price/i), { target: { value: "100" } });
     fireEvent.click(screen.getByRole("button", { name: /save & mark as sent/i }));
     expect(screen.getAllByText("Greta Lind").length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/119\.00/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/121\.00/).length).toBeGreaterThan(0);
   });
 });
 

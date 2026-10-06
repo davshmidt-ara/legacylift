@@ -8,6 +8,7 @@ import { cloudPersistence } from "@/features/cloud/persistence";
 import { btnGhost, btnPrimary } from "@/features/digital/components";
 import { useWorkspace } from "@/features/digital/store";
 import { WorkspaceShell } from "./WorkspaceShell";
+import { useT } from "@/i18n";
 
 const DEVICE_MODE_KEY = "legacylift.deviceMode";
 const LAST_FIRM_KEY = "legacylift.lastFirm";
@@ -32,6 +33,7 @@ const sidebarBtn =
   "inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-ll-sidebar-muted hover:text-ll-sidebar-foreground hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ll-highlight";
 
 export default function ClientEntry() {
+  const t = useT();
   const auth = useAuth();
   const [deviceMode, setDeviceMode] = useState(() => readKey(DEVICE_MODE_KEY) === "1");
 
@@ -40,7 +42,7 @@ export default function ClientEntry() {
       <WorkspaceShell
         account={
           <div className="px-3 flex flex-col gap-1.5">
-            <p className="text-[12px] leading-snug text-ll-sidebar-muted">Have an account? Sign in to keep your work safe online and share it with your adviser.</p>
+            <p className="text-[12px] leading-snug text-ll-sidebar-muted">{t("Have an account? Sign in to keep your work safe online and share it with your adviser.")}</p>
             <button
               type="button"
               className={`${sidebarBtn} self-start bg-white/10 text-ll-sidebar-foreground`}
@@ -49,7 +51,7 @@ export default function ClientEntry() {
                 setDeviceMode(false);
               }}
             >
-              Sign in
+              {t("Sign in")}
             </button>
           </div>
         }
@@ -60,11 +62,11 @@ export default function ClientEntry() {
   if (!auth.session || auth.recovering) {
     return (
       <AuthScreen
-        eyebrow="Your business"
-        title="Sign in to LegacyLift"
-        intro="Use the email address your LegacyLift adviser invited. New here? Create an account with that email."
+        eyebrow={t("Your business")}
+        title={t("Sign in to LegacyLift")}
+        intro={t("Use the email address your LegacyLift adviser invited. New here? Create an account with that email.")}
         deviceOption={{
-          label: "Try it without an account",
+          label: t("Try it without an account"),
           onChoose: () => {
             writeKey(DEVICE_MODE_KEY, "1");
             setDeviceMode(true);
@@ -77,6 +79,7 @@ export default function ClientEntry() {
 }
 
 function SignedIn() {
+  const t = useT();
   const auth = useAuth();
   const [list, setList] = useState<{ firmId: string; name: string }[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +92,7 @@ function SignedIn() {
       await auth.refreshAccess();
       setList(await myWorkspaces());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't load your businesses.");
+      setError(err instanceof Error ? err.message : t("Couldn't load your businesses."));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -100,41 +103,41 @@ function SignedIn() {
 
   if (error) {
     return (
-      <AuthFrame eyebrow="Your business" title="Something went wrong">
+      <AuthFrame eyebrow={t("Your business")} title={t("Something went wrong")}>
         <p className="text-sm text-muted-foreground mb-4">{error}</p>
         <div className="flex gap-2">
           <button type="button" className={btnPrimary} onClick={() => void load()}>
-            Try again
+            {t("Try again")}
           </button>
           <button type="button" className={btnGhost} onClick={() => void auth.signOut()}>
-            Sign out
+            {t("Sign out")}
           </button>
         </div>
       </AuthFrame>
     );
   }
-  if (!list) return <AuthLoading text="Opening your business…" />;
+  if (!list) return <AuthLoading text={t("Opening your business…")} />;
 
   if (list.length === 0) {
     return (
-      <AuthFrame eyebrow="Almost there" title="Your account isn't linked to a business yet">
+      <AuthFrame eyebrow={t("Almost there")} title={t("Your account isn't linked to a business yet")}>
         <div className="flex flex-col gap-4 text-sm">
           <p>
-            You're signed in as <strong>{auth.email}</strong>. Ask your LegacyLift adviser to invite this email address, then click <em>Check again</em>.
+            {t("You're signed in as")} <strong>{auth.email}</strong>. {t("Ask your LegacyLift adviser to invite this email address, then click Check again.")}
           </p>
           <div className="flex flex-wrap gap-2">
             <button type="button" className={btnPrimary} onClick={() => void load()}>
-              Check again
+              {t("Check again")}
             </button>
             <button type="button" className={btnGhost} onClick={() => void auth.signOut()}>
-              Sign out
+              {t("Sign out")}
             </button>
           </div>
           {auth.staff && (
             <p className="text-muted-foreground">
-              You're on the LegacyLift team.{" "}
+              {t("You're on the LegacyLift team.")}{" "}
               <Link to="/internal" className="text-primary underline">
-                Open the team console
+                {t("Open the team console")}
               </Link>
             </p>
           )}
@@ -184,12 +187,13 @@ function AccountBox({
   onSwitch: (id: string) => void;
   onSignOut: () => void;
 }) {
+  const t = useT();
   const { sync } = useWorkspace();
   return (
     <div className="px-3 flex flex-col gap-2 border-t border-white/10 pt-3">
       {list.length > 1 && (
         <label className="flex flex-col gap-1 text-[11px] uppercase tracking-[0.14em] text-ll-sidebar-muted">
-          Business
+          {t("Business")}
           <select
             id="switch-business"
             value={currentId}
@@ -208,16 +212,16 @@ function AccountBox({
         </label>
       )}
       <p className="text-[12px] text-ll-sidebar-muted truncate" title={email}>
-        Signed in as {email}
+        {t("Signed in as {email}", { email })}
       </p>
       <div className="flex flex-wrap gap-1">
         {staff && (
           <Link to="/internal" className={sidebarBtn}>
-            Team console
+            {t("Team console")}
           </Link>
         )}
         <button type="button" className={sidebarBtn} onClick={() => void sync.flushNow().finally(onSignOut)}>
-          <LogOut size={13} aria-hidden="true" /> Sign out
+          <LogOut size={13} aria-hidden="true" /> {t("Sign out")}
         </button>
       </div>
     </div>

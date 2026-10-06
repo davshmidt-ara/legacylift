@@ -1,11 +1,12 @@
 // Pure business logic for invoices, quotes and stock. Kept free of React so it is easy to test.
 import type { BusinessProfile, Customer, DisplayStatus, Invoice, InvoiceKind, StockItem } from "./types";
+import { locale, translate } from "@/i18n";
 
 export const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
-/** True when a document's tags say it has been paid ("paid", "bezahlt"…), but not "unpaid" / "nicht bezahlt". */
+/** True when a document's tags say it has been paid ("paid", "bezahlt", "apmaksāts"…), but not "unpaid" / "nicht bezahlt" / "neapmaksāts". */
 export function markedPaid(tags: string[]) {
-  return tags.some((t) => /^\s*(paid|bezahlt|payé|pagato|pagado|betaald)\s*$/i.test(t));
+  return tags.some((t) => /^\s*(paid|bezahlt|payé|pagato|pagado|betaald|apmaksāts|apmaksāta|samaksāts|samaksāta|apmokėta|makstud|tasutud)\s*$/i.test(t));
 }
 
 export function todayIso(now = new Date()) {
@@ -47,7 +48,7 @@ export function nextNumber(invoices: Invoice[], kind: InvoiceKind, profile: Busi
 
 export function customerName(customers: Customer[], id: string) {
   const c = customers.find((x) => x.id === id);
-  if (!c) return "Unknown customer";
+  if (!c) return translate("Unknown customer");
   return c.company ? `${c.company}${c.name ? ` (${c.name})` : ""}` : c.name;
 }
 
@@ -65,7 +66,7 @@ export function monthlyRevenue(invoices: Invoice[], months = 6, today = todayIso
   for (let k = months - 1; k >= 0; k--) {
     const d = new Date(Date.UTC(y, m - 1 - k, 1));
     const key = d.toISOString().slice(0, 7);
-    buckets.push({ key, label: d.toLocaleString(undefined, { month: "short", timeZone: "UTC" }), total: 0 });
+    buckets.push({ key, label: d.toLocaleString(locale(), { month: "short", timeZone: "UTC" }), total: 0 });
   }
   for (const inv of invoices) {
     if (inv.kind !== "invoice" || inv.status !== "paid") continue;

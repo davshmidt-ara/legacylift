@@ -1,5 +1,6 @@
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { currentLang } from "@/i18n";
 import { demoChat, demoDraft, demoExtract, demoRoadmap } from "./demo";
 import { customerName, displayStatus, invoiceTotals } from "./finance";
 import type { Assessment, ChatMessage, ExtractedRecord, Roadmap, WorkspaceState } from "./types";
@@ -15,7 +16,7 @@ export class AiError extends Error {}
 class AiUnavailable extends Error {}
 
 async function invoke<T>(body: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke("business-ai", { body });
+  const { data, error } = await supabase.functions.invoke("business-ai", { body: { ...body, language: currentLang() } });
   if (error) {
     if (error instanceof FunctionsHttpError) {
       const res = error.context as Response | undefined;

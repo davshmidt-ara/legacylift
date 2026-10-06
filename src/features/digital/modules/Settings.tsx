@@ -4,10 +4,13 @@ import { toast } from "sonner";
 import { isWorkspaceBackup, migrate, useWorkspace } from "../store";
 import type { BusinessProfile, WorkspaceState } from "../types";
 import { PageHeader, Panel, btnDanger, btnGhost, btnPrimary, download, fieldClass, labelClass } from "../components";
+import { LANGS, useLang, useT, type Lang } from "@/i18n";
 
 const CURRENCIES = ["EUR", "GBP", "USD", "CHF", "SEK", "NOK", "DKK", "PLN", "CZK", "AMD", "INR", "AUD", "CAD"];
 
 const Settings = () => {
+  const t = useT();
+  const { lang, setLang } = useLang();
   const { state, sync, setProfile, replaceAll, reset, loadSampleData } = useWorkspace();
   const online = sync.status !== "device";
   const [p, setP] = useState<BusinessProfile>(state.profile);
@@ -47,7 +50,7 @@ const Settings = () => {
       raw = null;
     }
     if (!isWorkspaceBackup(raw)) {
-      toast.error("That file isn't a LegacyLift backup. Choose a file saved with “Download backup”.");
+      toast.error(t("That file isn't a LegacyLift backup. Choose a file saved with “Download backup”."));
       return;
     }
     setPending({ name: file.name, data: migrate(raw) });
@@ -55,34 +58,34 @@ const Settings = () => {
 
   return (
     <div className="max-w-4xl">
-      <PageHeader eyebrow="Settings" title="Your business" description="These details appear on every invoice and quote, and help the AI write in your name." />
+      <PageHeader eyebrow={t("Settings")} title={t("Your business")} description={t("These details appear on every invoice and quote, and help the AI write in your name.")} />
 
       <form
         className="flex flex-col gap-6"
         onSubmit={(e) => {
           e.preventDefault();
           setProfile(p);
-          toast.success("Business details saved");
+          toast.success(t("Business details saved"));
         }}
       >
         <Panel className="grid gap-4 sm:grid-cols-2">
-          <h2 className="sm:col-span-2 font-heading text-lg font-semibold">Company</h2>
-          {text("businessName", "Business name", { placeholder: "Hartmann & Söhne Joinery" })}
-          {text("ownerName", "Owner / contact person")}
+          <h2 className="sm:col-span-2 font-heading text-lg font-semibold">{t("Company")}</h2>
+          {text("businessName", t("Business name"), { placeholder: t("e.g. SIA Kalniņa Galdniecība") })}
+          {text("ownerName", t("Owner / contact person"))}
           <label className={`${labelClass} sm:col-span-2`}>
-            Address
+            {t("Address")}
             <textarea id="profile-address" rows={3} className={fieldClass} value={p.address} onChange={(e) => setP({ ...p, address: e.target.value })} />
           </label>
-          {text("email", "Email", { type: "email" })}
-          {text("phone", "Phone", { type: "tel" })}
-          {text("taxId", "VAT / tax number", { mono: true })}
-          {text("bankDetails", "Bank details (printed on invoices)", { wide: true, placeholder: "Bank · IBAN · BIC" })}
+          {text("email", t("Email"), { type: "email" })}
+          {text("phone", t("Phone"), { type: "tel" })}
+          {text("taxId", t("VAT / tax number"), { mono: true })}
+          {text("bankDetails", t("Bank details (printed on invoices)"), { wide: true, placeholder: t("Bank · IBAN · BIC") })}
         </Panel>
 
         <Panel className="grid gap-4 sm:grid-cols-3">
-          <h2 className="sm:col-span-3 font-heading text-lg font-semibold">Invoicing</h2>
+          <h2 className="sm:col-span-3 font-heading text-lg font-semibold">{t("Invoicing")}</h2>
           <label className={labelClass}>
-            Currency
+            {t("Currency")}
             <select id="profile-currency" className={fieldClass} value={p.currency} onChange={(e) => setP({ ...p, currency: e.target.value })}>
               {CURRENCIES.map((c) => (
                 <option key={c}>{c}</option>
@@ -90,51 +93,71 @@ const Settings = () => {
             </select>
           </label>
           <label className={labelClass}>
-            Default tax rate (%)
+            {t("Default VAT rate (%)")}
             <input id="profile-tax" type="number" min={0} step="0.1" className={`${fieldClass} font-mono`} value={p.defaultTaxRate} onChange={(e) => setP({ ...p, defaultTaxRate: Number(e.target.value) })} />
           </label>
           <label className={labelClass}>
-            Payment terms (days)
+            {t("Payment terms (days)")}
             <input id="profile-terms" type="number" min={0} className={`${fieldClass} font-mono`} value={p.paymentTermsDays} onChange={(e) => setP({ ...p, paymentTermsDays: Number(e.target.value) })} />
           </label>
-          {text("invoicePrefix", "Invoice number prefix", { mono: true, placeholder: "INV" })}
-          {text("quotePrefix", "Quote number prefix", { mono: true, placeholder: "QUO" })}
+          {text("invoicePrefix", t("Invoice number prefix"), { mono: true, placeholder: "INV" })}
+          {text("quotePrefix", t("Quote number prefix"), { mono: true, placeholder: "QUO" })}
           <p className="text-xs text-muted-foreground self-end pb-2">
-            Next invoice: <span className="font-mono">{`${p.invoicePrefix || "INV"}-${new Date().getFullYear()}-0001`}</span> style
+            {t("Next invoice:")} <span className="font-mono">{`${p.invoicePrefix || "INV"}-${new Date().getFullYear()}-0001`}</span>
           </p>
           <label className={`${labelClass} sm:col-span-3`}>
-            Footer line on invoices
-            <input id="profile-footer" className={fieldClass} value={p.invoiceFooter} onChange={(e) => setP({ ...p, invoiceFooter: e.target.value })} placeholder="Thank you for your business." />
+            {t("Footer line on invoices")}
+            <input id="profile-footer" className={fieldClass} value={p.invoiceFooter} onChange={(e) => setP({ ...p, invoiceFooter: e.target.value })} placeholder={t("Thank you for your business.")} />
           </label>
         </Panel>
 
         <div>
           <button type="submit" className={btnPrimary}>
-            Save details
+            {t("Save details")}
           </button>
         </div>
       </form>
 
+      <Panel className="mt-10 flex flex-col gap-3">
+        <h2 className="font-heading text-lg font-semibold">{t("Language")}</h2>
+        <p className="text-sm text-muted-foreground">{t("The language of LegacyLift on this device, of printed invoices and of AI answers.")}</p>
+        <select
+          id="profile-language"
+          aria-label={t("Language")}
+          className={`${fieldClass} max-w-xs`}
+          value={lang}
+          onChange={(e) => setLang(e.target.value as Lang)}
+        >
+          {LANGS.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.name}
+            </option>
+          ))}
+        </select>
+      </Panel>
+
       <Panel className="mt-10 flex flex-col gap-4">
         <div>
-          <h2 className="font-heading text-lg font-semibold">Your data</h2>
+          <h2 className="font-heading text-lg font-semibold">{t("Your data")}</h2>
           <p className="text-sm text-muted-foreground">
-            Everything is stored in this browser on this device. Download a backup regularly and keep it somewhere safe; you can restore it here or on another computer.
+            {online
+              ? t("Everything is saved online and shared with your LegacyLift adviser. You can also download a backup to keep your own copy.")
+              : t("Everything is stored in this browser on this device. Download a backup regularly and keep it somewhere safe; you can restore it here or on another computer.")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" className={btnGhost} onClick={() => download(`legacylift-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(state, null, 2), "application/json")}>
-            <Download size={16} aria-hidden="true" /> Download backup
+            <Download size={16} aria-hidden="true" /> {t("Download backup")}
           </button>
           <button type="button" className={btnGhost} onClick={() => fileRef.current?.click()}>
-            <Upload size={16} aria-hidden="true" /> Restore backup
+            <Upload size={16} aria-hidden="true" /> {t("Restore backup")}
           </button>
           <input
             ref={fileRef}
             type="file"
             accept="application/json,.json"
             className="sr-only"
-            aria-label="Choose a backup file"
+            aria-label={t("Choose a backup file")}
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) importBackup(f);
@@ -142,15 +165,20 @@ const Settings = () => {
             }}
           />
           <button type="button" className={btnGhost} onClick={loadSampleData}>
-            Add example data
+            {t("Add example data")}
           </button>
         </div>
         {pending && (
           <div role="alert" className="rounded-md border border-ll-highlight/60 bg-ll-highlight/10 p-4 flex flex-col gap-3 text-sm">
             <p>
-              <strong>{pending.name}</strong> contains {pending.data.profile.businessName ? `“${pending.data.profile.businessName}” with ` : ""}
-              {pending.data.customers.length} customers, {pending.data.invoices.length} invoices and quotes, {pending.data.stock.length} stock items and{" "}
-              {pending.data.records.length} documents. Restoring replaces everything currently in this workspace.
+              <strong>{pending.name}</strong>{" "}
+              {t("contains {business}customers ({customers}), invoices and quotes ({invoices}), stock items ({stock}) and documents ({records}). Restoring replaces everything currently in this workspace.", {
+                business: pending.data.profile.businessName ? `“${pending.data.profile.businessName}”: ` : "",
+                customers: pending.data.customers.length,
+                invoices: pending.data.invoices.length,
+                stock: pending.data.stock.length,
+                records: pending.data.records.length,
+              })}
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -159,13 +187,13 @@ const Settings = () => {
                 onClick={() => {
                   replaceAll(pending.data);
                   setPending(null);
-                  toast.success("Backup restored");
+                  toast.success(t("Backup restored"));
                 }}
               >
-                Replace with this backup
+                {t("Replace with this backup")}
               </button>
               <button type="button" className={btnGhost} onClick={() => setPending(null)}>
-                Cancel
+                {t("Cancel")}
               </button>
             </div>
           </div>
@@ -176,17 +204,18 @@ const Settings = () => {
               <span className="text-sm basis-full">
                 {online ? (
                   <>
-                    This permanently deletes all customers, invoices, stock and documents of <strong>{state.profile.businessName || "this business"}</strong>{" "}
-                    <strong>for everyone who uses it</strong>, including your LegacyLift adviser. Download a backup first. Type the business name to confirm.
+                    {t("This permanently deletes all customers, invoices, stock and documents of")} <strong>{state.profile.businessName || t("this business")}</strong>{" "}
+                    <strong>{t("for everyone who uses it")}</strong>
+                    {t(", including your LegacyLift adviser. Download a backup first. Type the business name to confirm.")}
                   </>
                 ) : (
-                  "This deletes all customers, invoices, stock and documents in this browser."
+                  t("This deletes all customers, invoices, stock and documents in this browser.")
                 )}
               </span>
               {online && (
                 <input
                   id="confirm-business-name"
-                  aria-label="Type the business name to confirm"
+                  aria-label={t("Type the business name to confirm")}
                   className={`${fieldClass} max-w-xs`}
                   value={confirmName}
                   onChange={(e) => setConfirmName(e.target.value)}
@@ -204,10 +233,10 @@ const Settings = () => {
                   setP(online ? { ...migrate({}).profile, businessName: state.profile.businessName } : migrate({}).profile);
                   setConfirmReset(false);
                   setConfirmName("");
-                  toast.success("Workspace cleared");
+                  toast.success(t("Workspace cleared"));
                 }}
               >
-                Yes, delete everything
+                {t("Yes, delete everything")}
               </button>
               <button
                 type="button"
@@ -217,12 +246,12 @@ const Settings = () => {
                   setConfirmName("");
                 }}
               >
-                Cancel
+                {t("Cancel")}
               </button>
             </>
           ) : (
             <button type="button" className={`${btnGhost} text-destructive`} onClick={() => setConfirmReset(true)}>
-              Clear workspace…
+              {t("Clear workspace…")}
             </button>
           )}
         </div>

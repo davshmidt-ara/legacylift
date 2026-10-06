@@ -4,6 +4,7 @@ import { useBase } from "../base";
 import { useWorkspace } from "../store";
 import type { WorkspaceState } from "../types";
 import { Panel, btnPrimary } from "../components";
+import { msg, useT } from "@/i18n";
 
 export interface SetupStep {
   id: string;
@@ -18,34 +19,34 @@ export interface SetupStep {
 export const SETUP_STEPS: SetupStep[] = [
   {
     id: "details",
-    title: "Add your business details",
-    text: "Name, address and bank details. They are printed on every invoice.",
+    title: msg("Add your business details"),
+    text: msg("Name, address and bank details. They are printed on every invoice."),
     path: "/settings",
-    cta: "Open settings",
+    cta: msg("Open settings"),
     done: (s) => Boolean(s.profile.businessName && s.profile.address && s.profile.bankDetails),
   },
   {
     id: "customer",
-    title: "Add your first customer",
-    text: "Type one in, or photograph an old customer card.",
+    title: msg("Add your first customer"),
+    text: msg("Type one in, or photograph an old customer card."),
     path: "/customers",
-    cta: "Add a customer",
+    cta: msg("Add a customer"),
     done: (s) => s.customers.length > 0,
   },
   {
     id: "invoice",
-    title: "Write your first invoice or quote",
-    text: "Numbering, tax and totals are done for you.",
+    title: msg("Write your first invoice or quote"),
+    text: msg("Numbering, tax and totals are done for you."),
     path: "/invoices/new?kind=invoice",
-    cta: "Write an invoice",
+    cta: msg("Write an invoice"),
     done: (s) => s.invoices.length > 0,
   },
   {
     id: "digitize",
-    title: "Digitize one paper document",
-    text: "Photograph an invoice, order or contract. AI types it up for you to check.",
+    title: msg("Digitize one paper document"),
+    text: msg("Photograph an invoice, order or contract. AI types it up for you to check."),
     path: "/digitize",
-    cta: "Digitize paper",
+    cta: msg("Digitize paper"),
     done: (s) => s.records.length > 0,
   },
 ];
@@ -56,6 +57,7 @@ export function setupProgress(s: WorkspaceState) {
 }
 
 const GettingStarted = () => {
+  const t = useT();
   const { state } = useWorkspace();
   const base = useBase();
   const { done, total, next } = setupProgress(state);
@@ -64,9 +66,9 @@ const GettingStarted = () => {
   return (
     <Panel className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-heading text-lg font-semibold">Getting started</h2>
+        <h2 className="font-heading text-lg font-semibold">{t("Getting started")}</h2>
         <span className="text-xs text-muted-foreground">
-          {done} of {total} done
+          {t("{done} of {total} done", { done, total })}
         </span>
       </div>
       <ol className="grid gap-3 md:grid-cols-2">
@@ -79,19 +81,19 @@ const GettingStarted = () => {
               className={`flex items-start gap-3 rounded-md border p-3 ${isNext ? "border-primary bg-accent/40" : "border-border"}`}
             >
               {isDone ? (
-                <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-ll-success" aria-label="Done" />
+                <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-ll-success" aria-label={t("Done")} />
               ) : (
-                <Circle size={20} className="mt-0.5 shrink-0 text-muted-foreground" aria-label="Not done yet" />
+                <Circle size={20} className="mt-0.5 shrink-0 text-muted-foreground" aria-label={t("Not done yet")} />
               )}
               <div className="flex-1 min-w-0">
                 <p className={`text-sm font-medium ${isDone ? "text-muted-foreground line-through" : ""}`}>
                   <span className="font-mono text-muted-foreground mr-1.5">{i + 1}.</span>
-                  {step.title}
+                  {t(step.title)}
                 </p>
-                {!isDone && <p className="text-xs text-muted-foreground mt-0.5">{step.text}</p>}
+                {!isDone && <p className="text-xs text-muted-foreground mt-0.5">{t(step.text)}</p>}
                 {isNext && (
                   <Link to={`${base}${step.path}`} className={`${btnPrimary} mt-2 px-3 py-1.5 text-xs`}>
-                    {step.cta} <ArrowRight size={14} aria-hidden="true" />
+                    {t(step.cta)} <ArrowRight size={14} aria-hidden="true" />
                   </Link>
                 )}
               </div>

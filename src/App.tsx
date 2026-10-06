@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BASE_PATH } from "@/lib/site";
+import { useLang } from "@/i18n";
 import NotFound from "./pages/NotFound.tsx";
 import DigitalLanding from "./pages/digital/DigitalLanding.tsx";
 import DigitalApp from "./pages/digital/DigitalApp.tsx";
@@ -11,7 +12,10 @@ import OpsApp from "./pages/digital/ops/OpsApp.tsx";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  // Re-render every page when the language changes.
+  useLang();
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -26,6 +30,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

@@ -7,8 +7,9 @@ import type {
   ExtractedRecord,
   WorkspaceState,
 } from "./types";
-import { buildSampleData, SAMPLE_PROFILE, SAMPLE_RECORDS } from "./sample";
+import { buildSampleData, sampleProfile, sampleRecords } from "./sample";
 import { mergeWorkspaces } from "./merge";
+import { translate as tr, useT } from "@/i18n";
 
 const STORAGE_KEY = "legacylift.workspace.v1";
 
@@ -24,7 +25,7 @@ export const EMPTY_PROFILE: BusinessProfile = {
   taxId: "",
   bankDetails: "",
   currency: "EUR",
-  defaultTaxRate: 19,
+  defaultTaxRate: 21, // standard VAT in Latvia and Lithuania
   paymentTermsDays: 14,
   invoicePrefix: "INV",
   quotePrefix: "QUO",
@@ -199,9 +200,9 @@ export function WorkspaceProvider({
         stateRef.current = merged;
         setState(merged);
         if (clashes > 0) {
-          toast.warning("Someone else changed the same item at the same time. Your version was kept — please check it.");
+          toast.warning(tr("Someone else changed the same item at the same time. Your version was kept — please check it."));
         } else {
-          toast.message("Combined your changes with someone else's.");
+          toast.message(tr("Combined your changes with someone else's."));
         }
       } else {
         versionRef.current = result;
@@ -213,7 +214,7 @@ export function WorkspaceProvider({
       else setStatus("saved");
     } catch (err) {
       inFlightRef.current = false;
-      setError(err instanceof Error ? err.message : "Couldn't save");
+      setError(err instanceof Error ? err.message : tr("Couldn't save"));
       setStatus("error");
       clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => void flush(), RETRY_DELAY_MS);
@@ -237,7 +238,7 @@ export function WorkspaceProvider({
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "Couldn't load the workspace");
+        setError(err instanceof Error ? err.message : tr("Couldn't load the workspace"));
         setStatus("load-error");
       });
     return () => {
@@ -265,7 +266,7 @@ export function WorkspaceProvider({
         .then((loaded) => {
           if (loaded.version > versionRef.current && JSON.stringify(stateRef.current) === savedJsonRef.current) {
             applyRemote(loaded);
-            toast.message("Updated with the latest changes.");
+            toast.message(tr("Updated with the latest changes."));
           }
         })
         .catch(() => undefined);
@@ -335,11 +336,11 @@ export function WorkspaceProvider({
       const sample = buildSampleData(newId);
       return {
         ...s,
-        profile: s.profile.businessName ? s.profile : SAMPLE_PROFILE,
+        profile: s.profile.businessName ? s.profile : sampleProfile(),
         customers: [...sample.customers, ...s.customers],
         invoices: [...sample.invoices, ...s.invoices],
         stock: [...sample.stock, ...s.stock],
-        records: [...SAMPLE_RECORDS.map((r) => toRecord(r, "sample")), ...s.records],
+        records: [...sampleRecords().map((r) => toRecord(r, "sample")), ...s.records],
       };
     });
   }, []);
@@ -352,30 +353,35 @@ export function WorkspaceProvider({
   );
 
   if (status === "loading" || status === "load-error") {
-    return (
-      <div className="theme-legacylift min-h-screen flex items-center justify-center p-6">
-        {status === "loading" ? (
-          <p role="status" className="flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="animate-spin" size={18} aria-hidden="true" /> Opening your workspace…
-          </p>
-        ) : (
-          <div role="alert" className="max-w-md rounded-lg border border-border bg-card p-6 text-center flex flex-col gap-3">
-            <p className="font-heading text-lg font-semibold">We couldn't open this workspace</p>
-            <p className="text-sm text-muted-foreground">{error}</p>
-            <button
-              type="button"
-              onClick={retry}
-              className="self-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              Try again
-            </button>
-          </div>
-        )}
-      </div>
-    );
+    return <WorkspaceStatus status={status} error={error} retry={retry} />;
   }
 
   return <WorkspaceContext.Provider value={api}>{children}</WorkspaceContext.Provider>;
+}
+
+function WorkspaceStatus({ status, error, retry }: { status: string; error: string | null; retry: () => void }) {
+  const t = useT();
+  return (
+    <div className="theme-legacylift min-h-screen flex items-center justify-center p-6">
+      {status === "loading" ? (
+        <p role="status" className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="animate-spin" size={18} aria-hidden="true" /> {t("Opening your workspace…")}
+        </p>
+      ) : (
+        <div role="alert" className="max-w-md rounded-lg border border-border bg-card p-6 text-center flex flex-col gap-3">
+          <p className="font-heading text-lg font-semibold">{t("We couldn't open this workspace")}</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <button
+            type="button"
+            onClick={retry}
+            className="self-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t("Try again")}
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function useWorkspace() {

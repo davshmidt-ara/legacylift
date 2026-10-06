@@ -5,15 +5,17 @@ import { askAssistant } from "../ai";
 import { useWorkspace } from "../store";
 import type { ChatMessage } from "../types";
 import { DemoNotice, PageHeader, btnGhost, btnPrimary, fieldClass } from "../components";
+import { msg, useT } from "@/i18n";
 
 const SUGGESTIONS = [
-  "Which invoices are still unpaid?",
-  "Who are our best customers?",
-  "What are we running low on?",
-  "Which customers should I follow up with this week?",
+  msg("Which invoices are still unpaid?"),
+  msg("Who are our best customers?"),
+  msg("What are we running low on?"),
+  msg("Which customers should I follow up with this week?"),
 ];
 
 const Assistant = () => {
+  const t = useT();
   const { state, update } = useWorkspace();
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -38,7 +40,7 @@ const Assistant = () => {
       // Only append the answer if the conversation wasn't cleared while we waited.
       update((s) => (s.chat[s.chat.length - 1] === asked ? { chat: [...s.chat, { role: "assistant", content: value }] } : {}));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "The assistant couldn't answer. Please try again.");
+      toast.error(err instanceof Error ? err.message : t("The assistant couldn't answer. Please try again."));
     } finally {
       setBusy(false);
     }
@@ -47,13 +49,18 @@ const Assistant = () => {
   return (
     <div className="max-w-3xl flex flex-col min-h-[calc(100vh-8rem)]">
       <PageHeader
-        title="AI assistant"
+        title={t("AI assistant")}
         eyebrow="AI"
-        description={`Ask questions about your business in plain language. The assistant reads your ${state.customers.length} customers, ${state.invoices.length} invoices and quotes, ${state.stock.length} stock items and ${state.records.length} archived documents.`}
+        description={t("Ask questions about your business in plain language. The assistant reads your customers ({customers}), invoices and quotes ({invoices}), stock items ({stock}) and archived documents ({records}).", {
+          customers: state.customers.length,
+          invoices: state.invoices.length,
+          stock: state.stock.length,
+          records: state.records.length,
+        })}
         actions={
           state.chat.length > 0 && (
             <button type="button" className={btnGhost} onClick={() => update({ chat: [] })}>
-              <Trash2 size={16} aria-hidden="true" /> Clear
+              <Trash2 size={16} aria-hidden="true" /> {t("Clear")}
             </button>
           )
         }
@@ -67,9 +74,9 @@ const Assistant = () => {
                 key={s}
                 type="button"
                 className="rounded-lg border border-border bg-card p-3 text-left text-sm hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                onClick={() => send(s)}
+                onClick={() => send(t(s))}
               >
-                {s}
+                {t(s)}
               </button>
             ))}
           </div>
@@ -84,14 +91,14 @@ const Assistant = () => {
                 m.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border"
               }`}
             >
-              <span className="sr-only">{m.role === "user" ? "You: " : "Assistant: "}</span>
+              <span className="sr-only">{m.role === "user" ? t("You: ") : t("Assistant: ")}</span>
               {m.content}
             </div>
           </div>
         ))}
         {busy && (
           <p className="flex items-center gap-2 text-sm text-muted-foreground" role="status">
-            <Loader2 size={16} className="animate-spin" aria-hidden="true" /> Thinking…
+            <Loader2 size={16} className="animate-spin" aria-hidden="true" /> {t("Thinking…")}
           </p>
         )}
         <DemoNotice show={demo} />
@@ -106,16 +113,16 @@ const Assistant = () => {
         }}
       >
         <label htmlFor="chat-input" className="sr-only">
-          Ask a question
+          {t("Ask a question")}
         </label>
         <input
           id="chat-input"
           className={fieldClass}
-          placeholder="Ask about customers, invoices, suppliers…"
+          placeholder={t("Ask about customers, invoices, suppliers…")}
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
-        <button type="submit" className={btnPrimary} disabled={busy || !input.trim()} aria-label="Send">
+        <button type="submit" className={btnPrimary} disabled={busy || !input.trim()} aria-label={t("Send")}>
           <Send size={16} aria-hidden="true" />
         </button>
       </form>

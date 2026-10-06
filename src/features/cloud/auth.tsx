@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { amIStaff, claimInvites } from "./api";
+import { translate as tr } from "@/i18n";
 
 interface AuthApi {
   /** False until the saved session (if any) has been checked. */
@@ -31,12 +32,12 @@ const AuthContext = createContext<AuthApi | null>(null);
 const returnUrl = () => `${window.location.origin}${window.location.pathname}`;
 
 function friendly(message: string) {
-  if (/invalid login credentials/i.test(message)) return "That email and password don't match. Check them, or reset your password.";
-  if (/email not confirmed/i.test(message)) return "Please confirm your email first. We sent you a link when you created the account.";
-  if (/already registered|already been registered/i.test(message)) return "There is already an account with this email. Sign in instead.";
-  if (/password should be at least/i.test(message)) return "Choose a password with at least 8 characters.";
-  if (/rate limit|too many/i.test(message)) return "Too many attempts. Please wait a minute and try again.";
-  if (/failed to fetch|network/i.test(message)) return "Can't reach the server. Check your internet connection.";
+  if (/invalid login credentials/i.test(message)) return tr("That email and password don't match. Check them, or reset your password.");
+  if (/email not confirmed/i.test(message)) return tr("Please confirm your email first. We sent you a link when you created the account.");
+  if (/already registered|already been registered/i.test(message)) return tr("There is already an account with this email. Sign in instead.");
+  if (/password should be at least/i.test(message)) return tr("Choose a password with at least 8 characters.");
+  if (/rate limit|too many/i.test(message)) return tr("Too many attempts. Please wait a minute and try again.");
+  if (/failed to fetch|network/i.test(message)) return tr("Can't reach the server. Check your internet connection.");
   return message;
 }
 
@@ -94,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {
-    if (password.length < 8) throw new Error("Choose a password with at least 8 characters.");
+    if (password.length < 8) throw new Error(tr("Choose a password with at least 8 characters."));
     const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: returnUrl() } });
     if (error) throw new Error(friendly(error.message));
     return !data.session;
@@ -106,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setNewPassword = useCallback(async (password: string) => {
-    if (password.length < 8) throw new Error("Choose a password with at least 8 characters.");
+    if (password.length < 8) throw new Error(tr("Choose a password with at least 8 characters."));
     const { error } = await supabase.auth.updateUser({ password });
     if (error) throw new Error(friendly(error.message));
     setRecovering(false);
