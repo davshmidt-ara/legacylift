@@ -7,7 +7,8 @@
   python make_reel.py --all --voice bright                    # other voice preset
   python make_reel.py --all --music beat.mp3                  # bake in a music bed (for auto-posting)
   python make_reel.py --all --preview                         # no voice, fast check of visuals/timing
-  python make_reel.py --voice-test                            # hear every voice preset
+  python make_reel.py --voice-test                            # hear every Edge voice preset
+  python make_reel.py --voice-test --voice kokoro             # hear the offline Kokoro voices
 
 Output: ../out/<episode-id>/reel.mp4, cover.jpg, caption.txt, meta.json
 """
@@ -213,7 +214,7 @@ def main():
     p.add_argument("episodes", nargs="*", help="episode JSON files")
     p.add_argument("--all", action="store_true", help="render every episode in ../episodes")
     p.add_argument("--voice", default=voice.DEFAULT_PRESET,
-                   help=f"preset ({', '.join(voice.VOICES)}) or 'VoiceName,+15%%,+2Hz'")
+                   help=f"preset ({', '.join(list(voice.VOICES) + list(voice.KOKORO))}) or 'VoiceName,+15%%,+2Hz'")
     p.add_argument("--hook", type=int, help="use hook_variants[N] as the opening line")
     p.add_argument("--music", help="music file to bake in (auto-ducked under the voice)")
     p.add_argument("--music-volume", type=float, default=0.35)
@@ -226,7 +227,8 @@ def main():
     if args.voice_test:
         os.makedirs(args.out, exist_ok=True)
         line = "This shirt cost about two dollars to make. You paid twenty-five. So who took the rest?"
-        for name in voice.VOICES:
+        names = list(voice.KOKORO) if args.voice.startswith("kokoro") else list(voice.VOICES)
+        for name in names:
             path = os.path.join(args.out, f"voice-{name}.mp3")
             voice.synth_scene(line, path, name)
             print("wrote", path)

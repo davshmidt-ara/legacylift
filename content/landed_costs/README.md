@@ -51,6 +51,14 @@ python make_reel.py --voice-test      # writes out/voice-*.mp3, one per preset
 
 You can also pass any voice directly, e.g. `--voice "en-US-AndrewMultilingualNeural,+25%,+6Hz"`. Pick one voice and keep it: a consistent voice is part of the character.
 
+**Offline backup voice (Kokoro):** if the Edge voice won't work on your computer, install the free open-source Kokoro model with `pip install kokoro`. It downloads the model once (about 300 MB) and then runs offline. Hear its voices with `python make_reel.py --voice-test --voice kokoro`, then render with `--voice kokoro`, `kokoro-puck` (the most energetic), `kokoro-fenrir` or `kokoro-heart`.
+
+**If the voice fails**, the error message lists the fixes. In order:
+1. Update the voice tool: `pip install -U edge-tts`. Microsoft changes its service often, and old versions stop working.
+2. Turn off any VPN, and your antivirus's "HTTPS scanning" or "web shield". This causes `SSL: CERTIFICATE_VERIFY_FAILED` errors.
+3. Make sure your computer's clock and time zone are correct.
+4. Still failing? Use `--voice kokoro`.
+
 **Tips for an exciting delivery:** short sentences, question marks ("Ten cents? Not a typo.") and numbers written as words ("twenty-five") make the voice punchier. The scripts are already written that way.
 
 ## 3. Make Reels
