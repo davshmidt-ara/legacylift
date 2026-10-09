@@ -1,4 +1,4 @@
-project_id = "xfqlcjdywkfvrkipbunr"  # change to LegacyLift's own project ref (docs/DEPLOYMENT.md, 1a)
+project_id = "yjhyebiiwtkzqswtnsal"
 
 # business-ai checks sign-in and firm membership itself (see AI_ALLOW_ANONYMOUS in the function).
 [functions.business-ai]

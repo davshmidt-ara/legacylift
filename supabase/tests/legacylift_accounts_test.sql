@@ -107,4 +107,18 @@ reset role;
 -- 7. deleting an account removes it from the register
 delete from auth.users where id = :MSFT;
 select pg_temp.check((select count(*) from internal.accounts where user_id = :MSFT) = 0, 'deleted accounts leave the register');
+
+-- 8. founding admins join the team automatically, but only with a verified address
+\set FOUNDER  '''00000000-0000-0000-0000-0000000000f5'''
+\set EARLY    '''00000000-0000-0000-0000-0000000000f6'''
+insert into auth.users (id, email, email_confirmed_at) values (:EARLY, 'early@legacylift.example', now());
+insert into internal.founding_admins (email) values ('founder@legacylift.example'), ('early@legacylift.example');
+select pg_temp.check(exists (select 1 from public.staff where user_id = :EARLY), 'an existing account joins the team when its address is listed');
+insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values (:FOUNDER, 'Founder@LegacyLift.example', null, '{"full_name": "Founder Name"}');
+select pg_temp.check(not exists (select 1 from public.staff where user_id = :FOUNDER), 'not before the address is confirmed');
+update auth.users set email_confirmed_at = now() where id = :FOUNDER;
+select pg_temp.check((select display_name from public.staff where user_id = :FOUNDER) = 'Founder Name', 'joins the team once confirmed, with their name');
+select pg_temp.as_user(:MARIA); set role authenticated;
+select pg_temp.must_fail($$insert into internal.founding_admins values ('maria@bakery.test')$$, 'nobody can add themselves as a founding admin through the API');
+reset role;
 \echo ALL ACCOUNT TESTS PASSED

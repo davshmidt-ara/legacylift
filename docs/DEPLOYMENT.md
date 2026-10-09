@@ -13,7 +13,7 @@ Do them in this order: backend (section 1), then website (section 2), then check
 
 ### a. Create LegacyLift's own Supabase project
 
-`.env` still points at the Supabase project shared with the Noah site (`xfqlcjdywkfvrkipbunr`). To keep LegacyLift fully separate, give it its own project:
+LegacyLift has its own project: `yjhyebiiwtkzqswtnsal` (in `.env`). To set one up from scratch:
 
 1. At [supabase.com/dashboard](https://supabase.com/dashboard), click **New project**.
 2. Name it `legacylift`, and choose a strong database password. Save the password; you'll need it later.
@@ -33,10 +33,19 @@ Do them in this order: backend (section 1), then website (section 2), then check
 
 ### b. Create the database tables
 
-In the new project, open **SQL editor → New query**. Run these two files, in this order, once each (paste the whole file, click **Run**):
+In the project, open **SQL editor → New query**. Paste the whole of [`supabase/setup/legacylift_setup.sql`](../supabase/setup/legacylift_setup.sql), click **Run**, and run it once. It contains, in order:
 
 1. `supabase/migrations/20260927120000_legacylift_cloud.sql`: clients, workspaces and who may see what.
 2. `supabase/migrations/20261009120000_accounts_and_sign_up.sql`: open sign-up, Google and Microsoft accounts, self-service business set-up, and the private account register.
+3. `supabase/migrations/20261009130000_founding_admin.sql`: founding admins.
+
+Then make yourself the admin with one more query. Use the address you will sign in with:
+
+```sql
+insert into internal.founding_admins (email) values ('you@example.com');
+```
+
+You become the admin automatically the first time you sign in with that address (Google, Microsoft or a confirmed email). If you already have an account, it happens immediately.
 
 ### c. Sign-in settings
 
