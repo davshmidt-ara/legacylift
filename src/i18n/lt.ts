@@ -54,7 +54,7 @@ export const LT: Record<string, string> = {
   "Sign in": "Prisijungti",
   "Your business": "Jūsų įmonė",
   "Sign in to LegacyLift": "Prisijungti prie LegacyLift",
-  "Use the email address your LegacyLift adviser invited. New here? Create an account with that email.": "Naudokite el. pašto adresą, kuriuo jus pakvietė LegacyLift konsultantas. Esate čia pirmą kartą? Susikurkite paskyrą su šiuo el. paštu.",
+  "New here? Create an account in a minute with Google, Microsoft or your email. Invited by a LegacyLift adviser? Use the email address they invited.": "Esate čia pirmą kartą? Susikurkite paskyrą per minutę su Google, Microsoft arba savo el. paštu. Jus pakvietė LegacyLift konsultantas? Naudokite el. pašto adresą, kuriuo buvote pakviesti.",
   "Try it without an account": "Išbandyti be paskyros",
   "Couldn't load your businesses.": "Nepavyko įkelti jūsų įmonių.",
   "Something went wrong": "Kažkas nepavyko",
@@ -684,4 +684,16 @@ export const LT: Record<string, string> = {
   // Default number prefixes for a new business
   "INV": "SF",
   "QUO": "PAS",
+
+  // Accounts: Google / Microsoft sign-in and business set-up
+  "This sign-in option isn't switched on yet. Please use your email and password.": "Šis prisijungimo būdas dar neįjungtas. Naudokite savo el. paštą ir slaptažodį.",
+  "Continue with Google": "Tęsti su Google",
+  "Continue with Microsoft": "Tęsti su Microsoft",
+  "or with email": "arba el. paštu",
+  "Your name": "Jūsų vardas",
+  "Your account and business data are private: only you and your LegacyLift adviser can see them.": "Jūsų paskyra ir įmonės duomenys yra privatūs: juos matote tik jūs ir jūsų LegacyLift konsultantas.",
+  "Set up your business": "Sukurkite savo įmonę",
+  "Enter your business name to open your own workspace. Only you and your LegacyLift adviser can see it.": "Įveskite įmonės pavadinimą, kad atidarytumėte savo darbo vietą. Ją matote tik jūs ir jūsų LegacyLift konsultantas.",
+  "Were you invited by a LegacyLift adviser? Then your business is waiting under the email address they used. Sign in with that address, or click Check again.": "Jus pakvietė LegacyLift konsultantas? Tada jūsų įmonė laukia prie el. pašto adreso, kurį jis naudojo. Prisijunkite juo arba spustelėkite „Tikrinti dar kartą“.",
+  "Open my workspace": "Atidaryti mano darbo vietą",
 };

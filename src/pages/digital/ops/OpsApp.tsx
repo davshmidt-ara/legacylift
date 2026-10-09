@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Route, Routes, useParams } from "react-router-dom";
-import { ArrowLeft, BookOpen, Building2, LayoutDashboard, LogOut, Menu, Users, X, type LucideIcon } from "lucide-react";
+import { ArrowLeft, BookOpen, Building2, LayoutDashboard, LogOut, Menu, UserRound, Users, X, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { clientStorageKey } from "@/features/digital/store";
 import { OpsProvider, useOps } from "@/features/ops/store";
@@ -9,9 +9,10 @@ import { AuthFrame, AuthLoading, AuthScreen } from "@/features/cloud/AuthScreen"
 import { CloudOpsProvider } from "@/features/cloud/CloudOpsProvider";
 import { cloudPersistence } from "@/features/cloud/persistence";
 import { staffExists } from "@/features/cloud/api";
+import { useNoIndex } from "@/lib/site";
 import { btnGhost, btnPrimary } from "@/features/digital/components";
 import { Brand, WorkspaceShell } from "../WorkspaceShell";
-import { OPS, OpsClientDetail, OpsClients, OpsOverview, OpsPlaybook, OpsTeam, StagePill, clientBase } from "./OpsPages";
+import { OPS, OpsAccounts, OpsClientDetail, OpsClients, OpsOverview, OpsPlaybook, OpsTeam, StagePill, clientBase } from "./OpsPages";
 
 const NAV: { to: string; label: string; icon: LucideIcon; end?: boolean }[] = [
   { to: OPS, label: "Overview", icon: LayoutDashboard, end: true },
@@ -38,7 +39,8 @@ function TeamMember() {
 
 function OpsNav({ onNavigate }: { onNavigate?: () => void }) {
   const { mode } = useOps();
-  const items = mode === "cloud" ? [...NAV, { to: `${OPS}/team`, label: "Team", icon: Users }] : NAV;
+  const items =
+    mode === "cloud" ? [...NAV, { to: `${OPS}/accounts`, label: "Accounts", icon: UserRound }, { to: `${OPS}/team`, label: "Team", icon: Users }] : NAV;
   return (
     <ul className="flex flex-col gap-0.5">
       {items.map(({ to, label, icon: Icon, end }: (typeof NAV)[number]) => (
@@ -126,6 +128,7 @@ function OpsLayout() {
           <Route path="clients" element={<OpsClients />} />
           <Route path="clients/:id" element={<OpsClientDetail />} />
           <Route path="playbook" element={<OpsPlaybook />} />
+          <Route path="accounts" element={<OpsAccounts />} />
           <Route path="team" element={<OpsTeam />} />
         </Routes>
       </main>
@@ -290,6 +293,7 @@ function OpsEntry({ seedExamples }: { seedExamples: boolean }) {
 }
 
 const OpsApp = ({ seedExamples = false, demoOnly = false }: { seedExamples?: boolean; demoOnly?: boolean }) => {
+  useNoIndex();
   useEffect(() => {
     const prev = document.title;
     document.title = "LegacyLift Ops";

@@ -8,22 +8,20 @@ These check the access rules in `../migrations/20260927120000_legacylift_cloud.s
 createdb ll
 psql -d ll -f 00_local_supabase_stub.sql          # stand-in for Supabase's auth schema and roles
 psql -d ll -f ../migrations/20260927120000_legacylift_cloud.sql
+psql -d ll -f ../migrations/20261009120000_accounts_and_sign_up.sql
 psql -d ll -f legacylift_access_test.sql           # prints "ok …" per check, ends with ALL SQL TESTS PASSED
+psql -d ll -f legacylift_accounts_test.sql         # sign-up, Google/Microsoft accounts, private register: ALL ACCOUNT TESTS PASSED
 ```
 
 This covers the staff, client, stranger, unconfirmed-account and logged-out cases: who can read, save, invite and delete, version checks on saving, and that TRUNCATE and direct inserts are refused.
 
 ## App code against a real API (Postgres + PostgREST)
 
-1. Create a database as above, but without running the test script. Then add the login role and test users:
+1. Create a database as above, but without running the test scripts. Then add the login role and the admin (the test users come from the stub):
 
    ```sql
    create role authenticator login password 'authpw' noinherit;
    grant anon, authenticated to authenticator;
-   insert into auth.users values
-     ('00000000-0000-0000-0000-00000000000a','owner@agency.test',now()),
-     ('00000000-0000-0000-0000-00000000000c','maria@bakery.test',now()),
-     ('00000000-0000-0000-0000-00000000000d','klaus@joinery.test',now());
    insert into public.staff (user_id, display_name) select id, 'Owner' from auth.users where email = 'owner@agency.test';
    ```
 

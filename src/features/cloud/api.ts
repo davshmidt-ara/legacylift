@@ -81,6 +81,45 @@ export async function amIStaff(userId: string) {
   return data ? { displayName: data.display_name } : null;
 }
 
+/** A signed-in person who wasn't invited sets up their own business. Returns its id. */
+export async function startMyBusiness(name: string): Promise<string> {
+  const { data, error } = await supabase.rpc("start_my_business", { p_name: name });
+  if (error) throw new CloudError(error.message);
+  return data as string;
+}
+
+export interface Account {
+  userId: string;
+  email: string;
+  fullName: string;
+  /** How they sign in, e.g. "email", "google", "azure" (Microsoft) or "email, google". */
+  providers: string;
+  language: string;
+  createdAt: string;
+  emailConfirmed: boolean;
+  lastSignInAt: string | null;
+  isStaff: boolean;
+  businesses: { id: string; name: string }[];
+}
+
+/** Staff only: every account, newest first, from the private account register. */
+export async function accountRegister(): Promise<Account[]> {
+  const { data, error } = await supabase.rpc("account_register");
+  if (error) fail(error, "Couldn't load accounts");
+  return (data ?? []).map((a) => ({
+    userId: a.user_id,
+    email: a.email,
+    fullName: a.full_name,
+    providers: a.providers,
+    language: a.language,
+    createdAt: a.created_at,
+    emailConfirmed: a.email_confirmed,
+    lastSignInAt: a.last_sign_in_at,
+    isStaff: a.is_staff,
+    businesses: (a.businesses as { id: string; name: string }[] | null) ?? [],
+  }));
+}
+
 export async function staffExists() {
   const { data, error } = await supabase.rpc("staff_exists");
   if (error) fail(error, "Couldn't check the team");
@@ -114,6 +153,7 @@ type FirmRow = {
   owner: string;
   notes: string;
   manual_done: string[];
+  source?: string;
   created_at: string;
 };
 
@@ -130,6 +170,7 @@ const toClient = (r: FirmRow, log: LogEntry[]): Client => ({
   owner: r.owner,
   notes: r.notes,
   manualDone: r.manual_done ?? [],
+  source: r.source === "website" ? "website" : "team",
   log,
   createdAt: r.created_at,
 });

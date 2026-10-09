@@ -120,4 +120,20 @@ describe.skipIf(!REST_URL)("cloud API against a real database", () => {
     await api.deleteClient(firmId);
     expect(await api.listClients()).toEqual([]);
   });
+
+  it("a new account sets up its own business; only the team sees it in the account register", async () => {
+    actAs("klaus");
+    await expect(api.accountRegister()).rejects.toThrow(/Only the LegacyLift team/);
+    const own = await api.startMyBusiness("Hartmann Joinery");
+    expect(await api.myWorkspaces()).toEqual([{ firmId: own, name: "Hartmann Joinery" }]);
+    expect(await api.listClients()).toEqual([]); // still no access to the internal client list
+
+    actAs("owner");
+    const [lead] = await api.listClients();
+    expect(lead).toMatchObject({ firmName: "Hartmann Joinery", email: "klaus@joinery.test", source: "website", stage: "lead" });
+    const register = await api.accountRegister();
+    expect(register.find((a) => a.email === "klaus@joinery.test")?.businesses).toEqual([{ id: own, name: "Hartmann Joinery" }]);
+    expect(register.find((a) => a.email === "owner@agency.test")?.isStaff).toBe(true);
+    await api.deleteClient(own);
+  });
 });

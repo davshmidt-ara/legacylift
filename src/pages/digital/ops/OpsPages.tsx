@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, Circle, Copy, Download, ExternalLink, Mail, Plus, Search, Sparkles, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { isWorkspaceBackup, migrate } from "@/features/digital/store";
+import { isWorkspaceBackup, migrate, toCsv } from "@/features/digital/store";
 import type { WorkspaceState } from "@/features/digital/types";
 import {
   ConfirmDelete,
@@ -318,6 +318,7 @@ export function OpsClients() {
                     <Link to={`${OPS}/clients/${c.id}`} className={`font-medium ${linkClass} no-underline hover:underline`}>
                       {c.firmName}
                     </Link>
+                    {c.source === "website" && <WebsiteBadge />}
                     <span className="block text-xs text-muted-foreground">{[c.contactName, c.city].filter(Boolean).join(" · ")}</span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">{packageName(c.package)}</td>
@@ -404,7 +405,7 @@ export function OpsClientDetail() {
         <ArrowLeft size={16} aria-hidden="true" /> All clients
       </Link>
       <PageHeader
-        eyebrow={`${packageName(c.package)} · ${c.industry || "Client"}${c.city ? ` · ${c.city}` : ""}`}
+        eyebrow={`${packageName(c.package)} · ${c.industry || "Client"}${c.city ? ` · ${c.city}` : ""}${c.source === "website" ? " · Signed up on the website" : ""}`}
         title={c.firmName}
         description={[c.contactName, c.phone, c.email].filter(Boolean).join(" · ")}
         actions={
@@ -918,6 +919,174 @@ export function OpsTeam() {
           </ul>
         )}
       </Panel>
+    </div>
+  );
+}
+
+function WebsiteBadge() {
+  return <span className="ml-2 rounded-full bg-ll-info/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ll-info">Website sign-up</span>;
+}
+
+const PROVIDER_LABEL: Record<string, string> = { email: "Email", google: "Google", azure: "Microsoft" };
+const providerLabels = (providers: string) =>
+  providers
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => PROVIDER_LABEL[p] ?? p);
+
+type AccountFilter = "all" | "new" | "nobusiness" | "team";
+
+/** Every account, from the private register. Staff only; the database refuses anyone else. */
+export function OpsAccounts() {
+  const [accounts, setAccounts] = useState<cloud.Account[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<AccountFilter>("all");
+  const load = useCallback(() => {
+    setError(null);
+    cloud
+      .accountRegister()
+      .then(setAccounts)
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)));
+  }, []);
+  useEffect(load, [load]);
+
+  const weekAgo = Date.now() - 7 * 86400000;
+  const isNew = (a: cloud.Account) => Date.parse(a.createdAt) >= weekAgo;
+  const list = accounts ?? [];
+  const rows = list
+    .filter((a) => (filter === "new" ? isNew(a) : filter === "nobusiness" ? !a.isStaff && a.businesses.length === 0 : filter === "team" ? a.isStaff : true))
+    .filter((a) => !query.trim() || `${a.email} ${a.fullName} ${a.businesses.map((b) => b.name).join(" ")}`.toLowerCase().includes(query.trim().toLowerCase()));
+  const count = (p: string) => list.filter((a) => a.providers.split(",").some((x) => x.trim() === p)).length;
+  const when = (iso: string | null) => (iso ? `${formatDate(iso.slice(0, 10))} ${iso.slice(11, 16)}` : "—");
+
+  return (
+    <div className="max-w-6xl">
+      <PageHeader
+        eyebrow="Internal · confidential"
+        title="Accounts"
+        description="Everyone who has created a LegacyLift account, newest first. This list comes from a private register that the website itself cannot read; only people on the team can open this page."
+        actions={
+          <>
+            <button type="button" className={btnGhost} onClick={load}>
+              Refresh
+            </button>
+            <button
+              type="button"
+              className={btnGhost}
+              disabled={!rows.length}
+              onClick={() =>
+                download(
+                  `legacylift-accounts-${new Date().toISOString().slice(0, 10)}.csv`,
+                  toCsv(
+                    ["Email", "Name", "Sign-in", "Signed up", "Last sign-in", "Email confirmed", "Team", "Businesses"],
+                    rows.map((a) => [a.email, a.fullName, providerLabels(a.providers).join(" + "), a.createdAt, a.lastSignInAt ?? "", a.emailConfirmed ? "yes" : "no", a.isStaff ? "yes" : "no", a.businesses.map((b) => b.name).join("; ")]),
+                  ),
+                  "text/csv",
+                )
+              }
+            >
+              <Download size={16} aria-hidden="true" /> Export CSV
+            </button>
+          </>
+        }
+      />
+
+      {error && (
+        <Panel className="mb-6 border-destructive/40">
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">If this says the function doesn't exist, the database update for accounts hasn't been applied yet (docs/DEPLOYMENT.md, step 1b).</p>
+        </Panel>
+      )}
+
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-px bg-border border border-border rounded-lg overflow-hidden mb-6">
+        {[
+          ["Accounts", list.length],
+          ["New this week", list.filter(isNew).length],
+          ["Via Google", count("google")],
+          ["Via Microsoft", count("azure")],
+          ["Without a business", list.filter((a) => !a.isStaff && a.businesses.length === 0).length],
+        ].map(([label, n]) => (
+          <div key={label} className="bg-card p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+            <p className="mt-1 text-2xl font-semibold font-mono">{accounts ? n : "…"}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-2 sm:flex-row mb-4">
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <input aria-label="Search accounts" className={`${fieldClass} pl-9`} placeholder="Search email, name or business…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        </div>
+        <select aria-label="Show" className={`${fieldClass} sm:w-56`} value={filter} onChange={(e) => setFilter(e.target.value as AccountFilter)}>
+          <option value="all">All accounts</option>
+          <option value="new">New this week</option>
+          <option value="nobusiness">Without a business</option>
+          <option value="team">Our team</option>
+        </select>
+      </div>
+
+      {accounts === null && !error ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
+              <tr>
+                <th className="px-4 py-3 font-medium">Person</th>
+                <th className="px-4 py-3 font-medium">Sign-in</th>
+                <th className="px-4 py-3 font-medium hidden md:table-cell">Signed up</th>
+                <th className="px-4 py-3 font-medium hidden lg:table-cell">Last sign-in</th>
+                <th className="px-4 py-3 font-medium">Business</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((a) => (
+                <tr key={a.userId} className="border-b border-border last:border-0 align-top">
+                  <td className="px-4 py-3">
+                    <span className="font-medium">{a.fullName || a.email}</span>
+                    {a.fullName && <span className="block text-xs text-muted-foreground">{a.email}</span>}
+                    <span className="flex flex-wrap gap-1 mt-1">
+                      {isNew(a) && <span className="rounded-full bg-ll-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ll-success">New</span>}
+                      {a.isStaff && <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">Team</span>}
+                      {!a.emailConfirmed && <span className="rounded-full bg-ll-warning/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ll-warning">Email not confirmed</span>}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">{providerLabels(a.providers).join(" + ")}</td>
+                  <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">{when(a.createdAt)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap hidden lg:table-cell">{when(a.lastSignInAt)}</td>
+                  <td className="px-4 py-3">
+                    {a.businesses.length ? (
+                      <ul className="flex flex-col gap-0.5">
+                        {a.businesses.map((b) => (
+                          <li key={b.id}>
+                            <Link to={`${OPS}/clients/${b.id}`} className={linkClass}>
+                              {b.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <span className="text-muted-foreground">{a.isStaff ? "—" : "Not set up yet"}</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
+                    No accounts match.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

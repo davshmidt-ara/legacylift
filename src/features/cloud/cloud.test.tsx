@@ -10,6 +10,7 @@ globalThis.ResizeObserver ??= class {
 } as unknown as typeof ResizeObserver;
 
 // A signed-in (or not) Supabase auth, controlled per test.
+const oauth = vi.hoisted(() => vi.fn(async (_args: unknown) => ({ data: {}, error: null })));
 const authState = vi.hoisted(() => ({ session: null as null | { user: { id: string; email: string } } }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
@@ -17,6 +18,7 @@ vi.mock("@/integrations/supabase/client", () => ({
       getSession: async () => ({ data: { session: authState.session } }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => undefined } } }),
       signOut: async () => ({ error: null }),
+      signInWithOAuth: oauth,
     },
     from: () => ({ update: () => ({ eq: async () => ({ error: null }) }) }),
     functions: { invoke: async () => ({ data: null, error: new Error("offline") }) },
@@ -33,6 +35,8 @@ const api = vi.hoisted(() => ({
   staffExists: vi.fn(async () => false),
   listClients: vi.fn(async () => []),
   allWorkspaces: vi.fn(async () => ({})),
+  startMyBusiness: vi.fn(async (_name: string) => "f9"),
+  accountRegister: vi.fn(async () => [] as unknown[]),
 }));
 vi.mock("./api", async (orig) => ({ ...(await orig<typeof import("./api")>()), ...api }));
 
@@ -94,11 +98,31 @@ describe("client app sign-in", () => {
     expect(saved.profile.ownerName).toBe("Maria Lindner");
   });
 
-  it("explains what to do when the account isn't linked yet", async () => {
+  it("lets a new account set up its own business and opens it", async () => {
     signIn();
     renderAt("/app");
-    expect(await screen.findByRole("heading", { name: /isn't linked to a business yet/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /set up your business/i })).toBeInTheDocument();
     expect(screen.getByText("maria@bakery.test")).toBeInTheDocument();
+    api.myWorkspaces.mockResolvedValueOnce([{ firmId: "f9", name: "Maiznīca Saulīte" }]);
+    api.fetchWorkspace.mockResolvedValueOnce({ state: { ...EMPTY_STATE, profile: { ...EMPTY_STATE.profile, businessName: "Maiznīca Saulīte" } }, version: 1 });
+    fireEvent.change(screen.getByLabelText(/business name/i), { target: { value: "  Maiznīca Saulīte " } });
+    fireEvent.click(screen.getByRole("button", { name: /open my workspace/i }));
+    expect(await screen.findByRole("heading", { name: "Maiznīca Saulīte", level: 1 })).toBeInTheDocument();
+    expect(api.startMyBusiness).toHaveBeenCalledWith("  Maiznīca Saulīte ");
+    expect(api.fetchWorkspace).toHaveBeenCalledWith("f9");
+  });
+
+  it("signs in with Google or Microsoft and comes back to the same page", async () => {
+    const page = window.location.href; // the page they started on (the test router doesn't change the address bar)
+    const first = renderAt("/app");
+    fireEvent.click(await screen.findByRole("button", { name: /continue with google/i }));
+    await act(async () => {});
+    expect(oauth).toHaveBeenLastCalledWith({ provider: "google", options: { redirectTo: page, scopes: undefined } });
+    first.unmount();
+    renderAt("/app");
+    fireEvent.click(await screen.findByRole("button", { name: /continue with microsoft/i }));
+    await act(async () => {});
+    expect(oauth).toHaveBeenLastCalledWith({ provider: "azure", options: { redirectTo: page, scopes: "email openid profile" } });
   });
 });
 
@@ -120,6 +144,25 @@ describe("team console sign-in", () => {
     renderAt("/internal");
     expect(await screen.findByRole("heading", { name: /you don't have access yet/i })).toBeInTheDocument();
     expect(api.listClients).not.toHaveBeenCalled();
+  });
+
+  it("shows the team every account, from the private register", async () => {
+    signIn();
+    api.amIStaff.mockResolvedValue({ displayName: "Owner" });
+    api.accountRegister.mockResolvedValueOnce([
+      { userId: "u2", email: "ilze@saulite.example", fullName: "Ilze Saule", providers: "google", language: "lv", createdAt: new Date().toISOString(), emailConfirmed: true, lastSignInAt: null, isStaff: false, businesses: [{ id: "f9", name: "Maiznīca Saulīte" }] },
+      { userId: "u3", email: "jonas@medis.example", fullName: "", providers: "azure", language: "lt", createdAt: "2026-01-02T10:00:00Z", emailConfirmed: true, lastSignInAt: null, isStaff: false, businesses: [] },
+      { userId: "u1", email: "maria@bakery.test", fullName: "Maria", providers: "email", language: "", createdAt: "2025-12-01T10:00:00Z", emailConfirmed: true, lastSignInAt: null, isStaff: true, businesses: [] },
+    ]);
+    renderAt("/internal/accounts");
+    expect(await screen.findByRole("heading", { name: "Accounts" })).toBeInTheDocument();
+    expect(await screen.findByText("Ilze Saule")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Maiznīca Saulīte" })).toHaveAttribute("href", "/internal/clients/f9");
+    expect(screen.getByText("Microsoft")).toBeInTheDocument();
+    expect(screen.getByText("Not set up yet")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Show"), { target: { value: "nobusiness" } });
+    expect(screen.queryByText("Ilze Saule")).not.toBeInTheDocument();
+    expect(screen.getByText("jonas@medis.example")).toBeInTheDocument();
   });
 
   it("offers a demo mode that stays on this device", async () => {

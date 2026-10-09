@@ -112,6 +112,7 @@ export type Database = {
           city: string
           contact_name: string
           created_at: string
+          created_by: string | null
           email: string
           firm_name: string
           id: string
@@ -121,6 +122,7 @@ export type Database = {
           owner: string
           package: string
           phone: string
+          source: string
           stage: string
           updated_at: string
         }
@@ -128,6 +130,7 @@ export type Database = {
           city?: string
           contact_name?: string
           created_at?: string
+          created_by?: string | null
           email?: string
           firm_name: string
           id?: string
@@ -137,6 +140,7 @@ export type Database = {
           owner?: string
           package?: string
           phone?: string
+          source?: string
           stage?: string
           updated_at?: string
         }
@@ -144,6 +148,7 @@ export type Database = {
           city?: string
           contact_name?: string
           created_at?: string
+          created_by?: string | null
           email?: string
           firm_name?: string
           id?: string
@@ -153,6 +158,7 @@ export type Database = {
           owner?: string
           package?: string
           phone?: string
+          source?: string
           stage?: string
           updated_at?: string
         }
@@ -205,6 +211,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      account_register: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          email: string
+          full_name: string
+          providers: string
+          language: string
+          created_at: string
+          email_confirmed: boolean
+          last_sign_in_at: string | null
+          is_staff: boolean
+          businesses: Json
+        }[]
+      }
+      start_my_business: { Args: { p_name: string }; Returns: string }
       add_staff: { Args: { p_email: string; p_display_name?: string }; Returns: boolean }
       claim_invites: { Args: Record<PropertyKey, never>; Returns: number }
       confirmed_email: { Args: Record<PropertyKey, never>; Returns: string }

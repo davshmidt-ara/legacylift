@@ -54,7 +54,7 @@ export const ET: Record<string, string> = {
   "Sign in": "Logi sisse",
   "Your business": "Teie ettevõte",
   "Sign in to LegacyLift": "Logi LegacyLifti sisse",
-  "Use the email address your LegacyLift adviser invited. New here? Create an account with that email.": "Kasutage e-posti aadressi, kuhu teie LegacyLifti nõustaja kutse saatis. Olete siin esimest korda? Looge selle e-postiga konto.",
+  "New here? Create an account in a minute with Google, Microsoft or your email. Invited by a LegacyLift adviser? Use the email address they invited.": "Olete siin esimest korda? Looge konto minutiga Google'i, Microsofti või oma e-postiga. Kas teid kutsus LegacyLifti nõustaja? Kasutage e-posti aadressi, kuhu kutse saadeti.",
   "Try it without an account": "Proovi ilma kontota",
   "Couldn't load your businesses.": "Teie ettevõtteid ei õnnestunud laadida.",
   "Something went wrong": "Midagi läks valesti",
@@ -684,4 +684,16 @@ export const ET: Record<string, string> = {
   // Default number prefixes for a new business
   "INV": "ARVE",
   "QUO": "PAK",
+
+  // Accounts: Google / Microsoft sign-in and business set-up
+  "This sign-in option isn't switched on yet. Please use your email and password.": "See sisselogimisviis pole veel sisse lülitatud. Palun kasutage oma e-posti ja parooli.",
+  "Continue with Google": "Jätka Google'iga",
+  "Continue with Microsoft": "Jätka Microsoftiga",
+  "or with email": "või e-postiga",
+  "Your name": "Teie nimi",
+  "Your account and business data are private: only you and your LegacyLift adviser can see them.": "Teie konto ja ettevõtte andmed on privaatsed: neid näete ainult teie ja teie LegacyLifti nõustaja.",
+  "Set up your business": "Seadistage oma ettevõte",
+  "Enter your business name to open your own workspace. Only you and your LegacyLift adviser can see it.": "Sisestage oma ettevõtte nimi, et avada oma töölaud. Seda näete ainult teie ja teie LegacyLifti nõustaja.",
+  "Were you invited by a LegacyLift adviser? Then your business is waiting under the email address they used. Sign in with that address, or click Check again.": "Kas teid kutsus LegacyLifti nõustaja? Siis ootab teie ettevõte e-posti aadressil, mida ta kasutas. Logige sellega sisse või klõpsake „Kontrolli uuesti“.",
+  "Open my workspace": "Ava minu töölaud",
 };

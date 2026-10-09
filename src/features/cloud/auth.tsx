@@ -2,7 +2,10 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { amIStaff, claimInvites } from "./api";
-import { translate as tr } from "@/i18n";
+import { currentLang, translate as tr } from "@/i18n";
+
+/** Sign-in providers besides email: Google and Microsoft (Supabase calls Microsoft "azure"). */
+export type OAuthProvider = "google" | "azure";
 
 interface AuthApi {
   /** False until the saved session (if any) has been checked. */
@@ -19,7 +22,9 @@ interface AuthApi {
   recovering: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   /** Returns true when the user must confirm their email before signing in. */
-  signUp: (email: string, password: string) => Promise<boolean>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<boolean>;
+  /** Leaves the site for Google or Microsoft and comes back signed in. */
+  signInWith: (provider: OAuthProvider) => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   setNewPassword: (password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -38,6 +43,7 @@ function friendly(message: string) {
   if (/password should be at least/i.test(message)) return tr("Choose a password with at least 8 characters.");
   if (/rate limit|too many/i.test(message)) return tr("Too many attempts. Please wait a minute and try again.");
   if (/failed to fetch|network/i.test(message)) return tr("Can't reach the server. Check your internet connection.");
+  if (/provider is not enabled|unsupported provider/i.test(message)) return tr("This sign-in option isn't switched on yet. Please use your email and password.");
   return message;
 }
 
@@ -94,11 +100,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw new Error(friendly(error.message));
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  const signUp = useCallback(async (email: string, password: string, fullName = "") => {
     if (password.length < 8) throw new Error(tr("Choose a password with at least 8 characters."));
-    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: returnUrl() } });
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { emailRedirectTo: returnUrl(), data: { full_name: fullName.trim(), language: currentLang() } },
+    });
     if (error) throw new Error(friendly(error.message));
     return !data.session;
+  }, []);
+
+  const signInWith = useCallback(async (provider: OAuthProvider) => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      // Microsoft only shares the email address when asked for it.
+      options: { redirectTo: returnUrl(), scopes: provider === "azure" ? "email openid profile" : undefined },
+    });
+    if (error) throw new Error(friendly(error.message));
   }, []);
 
   const sendPasswordReset = useCallback(async (email: string) => {
@@ -129,12 +148,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       recovering,
       signIn,
       signUp,
+      signInWith,
       sendPasswordReset,
       setNewPassword,
       signOut,
       refreshAccess,
     }),
-    [ready, session, staff, checking, checkedFor, recovering, signIn, signUp, sendPasswordReset, setNewPassword, signOut, refreshAccess],
+    [ready, session, staff, checking, checkedFor, recovering, signIn, signUp, signInWith, sendPasswordReset, setNewPassword, signOut, refreshAccess],
   );
 
   return <AuthContext.Provider value={api}>{children}</AuthContext.Provider>;

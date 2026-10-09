@@ -42,7 +42,9 @@ Code lives in `src/features/digital/`, `src/features/ops/`, `src/features/cloud/
 
 ## Accounts and shared data
 
+- **Anyone can create an account** at `/app`: with Google, Microsoft or email and password. Someone who wasn't invited sets up their own business in one step; it appears in the console as a new lead marked *Website sign-up*.
 - **Clients** sign in at `/app` and their business opens. They can only ever see their own firm.
+- **Accounts** (console → Accounts) lists everyone who has signed up: how, when, last sign-in and their business. It reads a private register (`internal.accounts`) that only the team can see. Setup and privacy details: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) sections 1d–1e and 4.
 - **Our team** signs in at `/internal` and sees every client, the checklists and the activity log.
 - Data lives in Supabase, one workspace per firm. It saves automatically, and the sidebar says "All changes saved". If two people save at the same moment, their changes are combined item by item.
 - **Without an account** ("Try it without an account" / "demo mode"), everything stays in that browser only, as before.

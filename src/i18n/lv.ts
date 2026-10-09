@@ -54,7 +54,7 @@ export const LV: Record<string, string> = {
   "Sign in": "Pierakstīties",
   "Your business": "Jūsu uzņēmums",
   "Sign in to LegacyLift": "Pierakstīties LegacyLift",
-  "Use the email address your LegacyLift adviser invited. New here? Create an account with that email.": "Izmantojiet e-pasta adresi, uz kuru jūsu LegacyLift konsultants nosūtīja ielūgumu. Esat šeit pirmo reizi? Izveidojiet kontu ar šo e-pastu.",
+  "New here? Create an account in a minute with Google, Microsoft or your email. Invited by a LegacyLift adviser? Use the email address they invited.": "Esat šeit pirmo reizi? Izveidojiet kontu minūtes laikā ar Google, Microsoft vai savu e-pastu. Jūs uzaicināja LegacyLift konsultants? Izmantojiet e-pasta adresi, uz kuru tika nosūtīts ielūgums.",
   "Try it without an account": "Izmēģināt bez konta",
   "Couldn't load your businesses.": "Neizdevās ielādēt jūsu uzņēmumus.",
   "Something went wrong": "Kaut kas nogāja greizi",
@@ -684,4 +684,16 @@ export const LV: Record<string, string> = {
   // Default number prefixes for a new business
   "INV": "RĒĶ",
   "QUO": "PIED",
+
+  // Accounts: Google / Microsoft sign-in and business set-up
+  "This sign-in option isn't switched on yet. Please use your email and password.": "Šī pierakstīšanās iespēja vēl nav ieslēgta. Lūdzu, izmantojiet savu e-pastu un paroli.",
+  "Continue with Google": "Turpināt ar Google",
+  "Continue with Microsoft": "Turpināt ar Microsoft",
+  "or with email": "vai ar e-pastu",
+  "Your name": "Jūsu vārds",
+  "Your account and business data are private: only you and your LegacyLift adviser can see them.": "Jūsu konts un uzņēmuma dati ir privāti: tos redzat tikai jūs un jūsu LegacyLift konsultants.",
+  "Set up your business": "Iestatiet savu uzņēmumu",
+  "Enter your business name to open your own workspace. Only you and your LegacyLift adviser can see it.": "Ievadiet uzņēmuma nosaukumu, lai atvērtu savu darba vietu. To redzat tikai jūs un jūsu LegacyLift konsultants.",
+  "Were you invited by a LegacyLift adviser? Then your business is waiting under the email address they used. Sign in with that address, or click Check again.": "Jūs uzaicināja LegacyLift konsultants? Tad jūsu uzņēmums gaida pie e-pasta adreses, ko viņš izmantoja. Pierakstieties ar to vai nospiediet “Pārbaudīt vēlreiz”.",
+  "Open my workspace": "Atvērt manu darba vietu",
 };

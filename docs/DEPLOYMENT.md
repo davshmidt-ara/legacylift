@@ -33,18 +33,57 @@ Do them in this order: backend (section 1), then website (section 2), then check
 
 ### b. Create the database tables
 
-In the new project, open **SQL editor → New query**. Paste the whole of `supabase/migrations/20260927120000_legacylift_cloud.sql`, click **Run**, and run it once.
+In the new project, open **SQL editor → New query**. Run these two files, in this order, once each (paste the whole file, click **Run**):
+
+1. `supabase/migrations/20260927120000_legacylift_cloud.sql`: clients, workspaces and who may see what.
+2. `supabase/migrations/20261009120000_accounts_and_sign_up.sql`: open sign-up, Google and Microsoft accounts, self-service business set-up, and the private account register.
 
 ### c. Sign-in settings
 
 In **Authentication**:
 
 - **Sign In / Providers → Email:** keep **Confirm email** on.
-- **URL Configuration:** set **Site URL** to your website's address. Add every address the site runs on to **Redirect URLs**, for example:
-  - `https://legacylift.vercel.app/**`
-  - `https://your-domain.lv/**`
+- **URL Configuration:** set **Site URL** to your website's address, e.g. `https://davshmidt-ara.github.io/legacylift`. Add every address the site runs on to **Redirect URLs**, each ending in `/**`:
+  - `https://davshmidt-ara.github.io/legacylift/**`
+  - `https://your-domain.lv/**` (once you have one)
 
-### d. Turn on the AI
+Google and Microsoft both send people back to Supabase first, at this address. You'll need it in the next two steps:
+
+```
+https://<ref>.supabase.co/auth/v1/callback
+```
+
+### d. "Continue with Google" (about 10 minutes)
+
+1. Open [console.cloud.google.com](https://console.cloud.google.com) and create a project named `LegacyLift`.
+2. Go to **APIs & Services → OAuth consent screen**:
+   - Choose **External**.
+   - App name: `LegacyLift`, plus your support email.
+   - Under **Authorized domains**, add `supabase.co`, and your own domain if you have one.
+   - Save, then click **Publish app** so anyone can sign in, not only test users.
+3. Go to **APIs & Services → Credentials → Create credentials → OAuth client ID**:
+   - Type: **Web application**.
+   - Under **Authorized redirect URIs**, add the callback address above.
+   - Click **Create**, and copy the **Client ID** and **Client secret**.
+4. In Supabase, go to **Authentication → Sign In / Providers → Google**. Turn it on, paste the ID and secret, and save.
+
+### e. "Continue with Microsoft" (about 10 minutes)
+
+Supabase calls this provider **Azure**. It covers both work accounts (Microsoft 365) and personal ones (Outlook, Hotmail).
+
+1. Open [portal.azure.com](https://portal.azure.com) and go to **Microsoft Entra ID → App registrations → New registration**.
+   - Name: `LegacyLift`.
+   - Supported account types: **Accounts in any organizational directory and personal Microsoft accounts**.
+   - Redirect URI: type **Web**, then the callback address above.
+   - Click **Register**, and copy the **Application (client) ID**.
+2. Go to **Certificates & secrets → New client secret**, choose 24 months, and copy the secret's **Value**. It is shown only once.
+3. Go to **Token configuration → Add optional claim**, choose **ID**, and tick **email** and **xms_edov**. When asked, allow the Microsoft Graph permission. `xms_edov` tells Supabase whether Microsoft has verified the address. LegacyLift only lets a Microsoft account accept an invite, or be added to the team, when it has.
+4. In Supabase, go to **Authentication → Sign In / Providers → Azure**. Turn it on and paste the client ID and secret. Leave the tenant URL empty: that means "any Microsoft account". Save.
+5. Put a reminder in your calendar to make a new secret before this one expires (step 2).
+
+Until each provider is switched on, its button tells people "This sign-in option isn't switched on yet" and email sign-up still works.
+
+### f. Turn on the AI
 
 The AI runs in the `business-ai` function, which calls the Claude API. Get an API key at [console.anthropic.com](https://console.anthropic.com).
 
@@ -119,3 +158,23 @@ From then on, every change to `main` is published automatically.
 5. Write an invoice there. Within a second, the sidebar shows "All changes saved".
 6. Open the same client in the console. The invoice is there.
 7. In **Digitize paper**, paste some invoice text and extract it. With the AI key set you get a real AI result; without it, "Demo mode".
+8. Sign up once with Google and once with Microsoft (private windows). Each time you get **Set up your business**: enter a name, and the workspace opens.
+9. Back in the console, **Accounts** lists both new accounts with how they signed in. **Clients** shows their businesses as new leads, marked **Website sign-up**.
+
+---
+
+## 4. Where to find the internal side, and who can see what
+
+| What | Where | Who can open it |
+| --- | --- | --- |
+| Team console: clients, checklists, activity log, each client's workspace | `https://<your site>/internal` (now `https://davshmidt-ara.github.io/legacylift/internal`) | Only people on the team (the **Team** page) |
+| **Accounts**: everyone who has signed up, how (email, Google, Microsoft), when, last sign-in, and their business | Console → **Accounts**. **Export CSV** downloads the list | Only people on the team |
+| The raw tables | supabase.com → your project → **Table Editor** (pick schema `internal` for the account register) | Only the owners of the Supabase project |
+
+How the information stays confidential:
+
+- **The account register is locked away.** It lives in its own section of the database (`internal.accounts`), which the website's API does not expose and which has no access rules at all. No browser can read it, not even a team member's. The console's Accounts page reads it only through `account_register()`, which first checks that the person is on the team.
+- **Each client sees only their own business.** A client sees only the workspace of the business they set up or were invited to. Clients never see the client list, internal notes, the activity log or other accounts. The database enforces this, not the website, and `supabase/tests/` checks it on every rule.
+- **Passwords** are handled by Supabase and never stored by LegacyLift. With Google or Microsoft, LegacyLift never sees a password at all.
+- **Search engines** are kept out of `/app` and `/internal`.
+- **Data location.** Pick an EU region for the Supabase project (step 1a) so client data stays in the EU.

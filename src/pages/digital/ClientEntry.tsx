@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { LogOut } from "lucide-react";
-import { myWorkspaces } from "@/features/cloud/api";
+import { myWorkspaces, startMyBusiness } from "@/features/cloud/api";
 import { useAuth } from "@/features/cloud/auth";
 import { AuthFrame, AuthLoading, AuthScreen } from "@/features/cloud/AuthScreen";
 import { cloudPersistence } from "@/features/cloud/persistence";
-import { btnGhost, btnPrimary } from "@/features/digital/components";
+import { btnGhost, btnPrimary, fieldClass, labelClass } from "@/features/digital/components";
 import { useWorkspace } from "@/features/digital/store";
 import { WorkspaceShell } from "./WorkspaceShell";
 import { useT } from "@/i18n";
@@ -64,7 +64,7 @@ export default function ClientEntry() {
       <AuthScreen
         eyebrow={t("Your business")}
         title={t("Sign in to LegacyLift")}
-        intro={t("Use the email address your LegacyLift adviser invited. New here? Create an account with that email.")}
+        intro={t("New here? Create an account in a minute with Google, Microsoft or your email. Invited by a LegacyLift adviser? Use the email address they invited.")}
         deviceOption={{
           label: t("Try it without an account"),
           onChoose: () => {
@@ -120,13 +120,21 @@ function SignedIn() {
 
   if (list.length === 0) {
     return (
-      <AuthFrame eyebrow={t("Almost there")} title={t("Your account isn't linked to a business yet")}>
-        <div className="flex flex-col gap-4 text-sm">
+      <AuthFrame eyebrow={t("Almost there")} title={t("Set up your business")}>
+        <div className="flex flex-col gap-5 text-sm">
           <p>
-            {t("You're signed in as")} <strong>{auth.email}</strong>. {t("Ask your LegacyLift adviser to invite this email address, then click Check again.")}
+            {t("You're signed in as")} <strong>{auth.email}</strong>. {t("Enter your business name to open your own workspace. Only you and your LegacyLift adviser can see it.")}
           </p>
+          <StartBusiness
+            onDone={(firmId) => {
+              writeKey(LAST_FIRM_KEY, firmId);
+              setFirmId(firmId);
+              void load();
+            }}
+          />
+          <p className="text-muted-foreground">{t("Were you invited by a LegacyLift adviser? Then your business is waiting under the email address they used. Sign in with that address, or click Check again.")}</p>
           <div className="flex flex-wrap gap-2">
-            <button type="button" className={btnPrimary} onClick={() => void load()}>
+            <button type="button" className={btnGhost} onClick={() => void load()}>
               {t("Check again")}
             </button>
             <button type="button" className={btnGhost} onClick={() => void auth.signOut()}>
@@ -164,6 +172,42 @@ function SignedIn() {
         />
       }
     />
+  );
+}
+
+function StartBusiness({ onDone }: { onDone: (firmId: string) => void }) {
+  const t = useT();
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <form
+      className="rounded-lg border border-border bg-card p-5 flex flex-col gap-3"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        setError(null);
+        try {
+          onDone(await startMyBusiness(name));
+        } catch (err) {
+          setError(err instanceof Error ? err.message : t("Something went wrong. Please try again."));
+          setBusy(false);
+        }
+      }}
+    >
+      <label className={labelClass}>
+        {t("Business name")}
+        <input id="start-business-name" required maxLength={120} className={fieldClass} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("e.g. SIA Kalniņa Galdniecība")} />
+      </label>
+      {error && (
+        <p role="alert" className="text-destructive">
+          {error}
+        </p>
+      )}
+      <button type="submit" className={`${btnPrimary} self-start`} disabled={busy || !name.trim()}>
+        {t("Open my workspace")}
+      </button>
+    </form>
   );
 }
 

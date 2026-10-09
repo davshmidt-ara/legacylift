@@ -24,6 +24,8 @@ export interface Client {
   owner: string; // team member responsible
   notes: string;
   manualDone: string[]; // ids of checklist tasks ticked by hand
+  /** "website" when the business signed itself up; "team" when we added it. */
+  source?: "team" | "website";
   log: LogEntry[];
   createdAt: string;
 }
