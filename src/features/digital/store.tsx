@@ -9,7 +9,8 @@ import type {
 } from "./types";
 import { buildSampleData, sampleProfile, sampleRecords } from "./sample";
 import { mergeWorkspaces } from "./merge";
-import { translate as tr, useT } from "@/i18n";
+import { currentLang, translate as tr, useT } from "@/i18n";
+import { countryForLanguage, standardVat } from "./countries";
 
 const STORAGE_KEY = "legacylift.workspace.v1";
 
@@ -23,6 +24,7 @@ export const EMPTY_PROFILE: BusinessProfile = {
   email: "",
   phone: "",
   taxId: "",
+  country: "",
   bankDetails: "",
   currency: "EUR",
   defaultTaxRate: 21, // standard VAT in Latvia and Lithuania
@@ -34,7 +36,8 @@ export const EMPTY_PROFILE: BusinessProfile = {
 
 /** A new business's profile, with invoice and quote number prefixes in the language it is set up in (e.g. RĒĶ / PIED in Latvian). */
 export function freshProfile(): BusinessProfile {
-  return { ...EMPTY_PROFILE, invoicePrefix: tr("INV"), quotePrefix: tr("QUO") };
+  const country = countryForLanguage(currentLang());
+  return { ...EMPTY_PROFILE, country, defaultTaxRate: standardVat(country) ?? EMPTY_PROFILE.defaultTaxRate, invoicePrefix: tr("INV"), quotePrefix: tr("QUO") };
 }
 
 export const EMPTY_STATE: WorkspaceState = {
@@ -395,18 +398,24 @@ export function useWorkspace() {
   return ctx;
 }
 
-const csvEscape = (v: unknown) => {
-  const s = v === null || v === undefined ? "" : String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-};
 
-export function toCsv(header: string[], rows: unknown[][]): string {
-  return [header.map(csvEscape).join(","), ...rows.map((r) => r.map(csvEscape).join(","))].join("\n");
+/**
+ * CSV text. In Latvian, Lithuanian and Estonian it uses ";" between columns and a decimal comma, as Excel
+ * expects there; in English "," and a decimal point.
+ */
+export function toCsv(header: string[], rows: unknown[][], lang = currentLang()): string {
+  const baltic = lang === "lv" || lang === "lt" || lang === "et";
+  const sep = baltic ? ";" : ",";
+  const cell = (v: unknown) => {
+    const s = typeof v === "number" && baltic ? String(v).replace(".", ",") : v === null || v === undefined ? "" : String(v);
+    return s.includes(sep) || /["\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return [header.map(cell).join(sep), ...rows.map((r) => r.map(cell).join(sep))].join("\n");
 }
 
 export function recordsToCsv(records: BusinessRecord[]): string {
   return toCsv(
-    ["Type", "Title", "Party", "Date", "Amount", "Currency", "Status", "Tags", "Summary", "Source"],
+    [tr("Type"), tr("Title"), tr("Customer / supplier"), tr("Date"), tr("Amount"), tr("Currency"), tr("Status"), tr("Tags"), tr("Summary"), tr("Source")],
     records.map((r) => [r.docType, r.title, r.party, r.date, r.amount, r.currency, r.status, r.tags.join("; "), r.summary, r.source]),
   );
 }

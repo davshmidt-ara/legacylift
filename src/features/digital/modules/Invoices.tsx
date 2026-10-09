@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   BadgeCheck,
   Copy,
+  FileCode2,
   FileText,
   Loader2,
   Mail,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { writeDraft } from "../ai";
+import { eInvoiceProblems, eInvoiceXml } from "../einvoice";
 import {
   addDays,
   customerName,
@@ -33,6 +35,7 @@ import {
 } from "../finance";
 import { newId, toCsv, useWorkspace } from "../store";
 import { useBase } from "../base";
+import { countryName } from "../countries";
 import type { Customer, DisplayStatus, Invoice, InvoiceKind, LineItem } from "../types";
 import {
   ConfirmDelete,
@@ -84,10 +87,11 @@ function InvoiceList() {
     download(
       "invoices.csv",
       toCsv(
-        ["Type", "Number", "Customer", "Issue date", "Due date", "Net", "Tax", "Total", "Currency", "Status", "Paid on"],
+        [t("Type"), t("Number"), t("Customer"), t("VAT or registration number"), t("Issue date"), t("Due date"), t("Net"), t("VAT rate (%)"), t("VAT"), t("Total"), t("Currency"), t("Status"), t("Paid on")],
         rows.map((i) => {
           const sum = invoiceTotals(i);
-          return [i.kind, i.number, customerName(state.customers, i.customerId), i.issueDate, i.dueDate, sum.subtotal, sum.tax, sum.total, cur, displayStatus(i, today), i.paidAt ?? ""];
+          const c = state.customers.find((x) => x.id === i.customerId);
+          return [kindLabel(i.kind), i.number, customerName(state.customers, i.customerId), c?.taxId ?? "", i.issueDate, i.dueDate, sum.subtotal, i.taxRate, sum.tax, sum.total, cur, t(STATUS_LABEL[displayStatus(i, today)]), i.paidAt ?? ""];
         }),
       ),
       "text/csv",
@@ -528,6 +532,7 @@ function InvoiceDetail() {
   const inv = state.invoices.find((i) => i.id === id);
   const [reminder, setReminder] = useState<{ text: string; demo: boolean } | null>(null);
   const [drafting, setDrafting] = useState(false);
+  const [eInvoiceProblemList, setEInvoiceProblems] = useState<string[]>([]);
   const today = todayIso();
 
   if (!inv) {
@@ -679,6 +684,22 @@ function InvoiceDetail() {
             <button type="button" className={btnGhost} onClick={() => window.print()}>
               <Printer size={16} aria-hidden="true" /> {t("Print / PDF")}
             </button>
+            {inv.kind === "invoice" && (
+              <button
+                type="button"
+                className={btnGhost}
+                onClick={() => {
+                  const problems = eInvoiceProblems(inv, p, customer);
+                  setEInvoiceProblems(problems);
+                  if (!problems.length && customer) {
+                    download(`${inv.number}.xml`, eInvoiceXml(inv, p, customer), "application/xml");
+                    toast.success(t("E-invoice {number}.xml downloaded", { number: inv.number }));
+                  }
+                }}
+              >
+                <FileCode2 size={16} aria-hidden="true" /> {t("E-invoice (XML)")}
+              </button>
+            )}
             <Link to="edit" className={btnGhost}>
               <Pencil size={16} aria-hidden="true" /> {t("Edit")}
             </Link>
@@ -700,6 +721,28 @@ function InvoiceDetail() {
             </ConfirmDelete>
           </div>
         </div>
+
+        {eInvoiceProblemList.length > 0 && (
+          <Panel className="mb-6 flex flex-col gap-2 border-ll-warning/60">
+            <div className="flex items-center justify-between">
+              <h2 className="font-heading font-semibold">{t("Before this e-invoice can be made")}</h2>
+              <button type="button" className={iconBtn} aria-label={t("Close")} onClick={() => setEInvoiceProblems([])}>
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
+            <ul className="list-disc pl-5 text-sm">
+              {eInvoiceProblemList.map((x) => (
+                <li key={x}>{t(x)}</li>
+              ))}
+            </ul>
+            <p className="text-xs text-muted-foreground">
+              {t("E-invoices follow the EU standard (EN 16931, Peppol BIS 3.0) and can be uploaded to e-invoicing portals and accounting software.")}{" "}
+              <Link to={`${base}/settings`} className={linkClass}>
+                {t("Open settings")}
+              </Link>
+            </p>
+          </Panel>
+        )}
 
         {reminder && (
           <Panel className="mb-6 flex flex-col gap-3">
@@ -767,6 +810,8 @@ function InvoiceDetail() {
               <p className="font-semibold">{customer.company || customer.name}</p>
               {customer.company && <p className="text-sm">{customer.name}</p>}
               <p className="text-sm text-muted-foreground whitespace-pre-line">{customer.address}</p>
+              {customer.country && customer.country !== p.country && <p className="text-sm text-muted-foreground">{countryName(customer.country)}</p>}
+              {customer.taxId && <p className="text-sm text-muted-foreground">{t("VAT / reg. no. {id}", { id: customer.taxId })}</p>}
             </>
           ) : (
             <p className="text-sm text-muted-foreground">{t("No customer selected")}</p>

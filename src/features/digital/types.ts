@@ -47,9 +47,11 @@ export interface BusinessProfile {
   email: string;
   phone: string;
   taxId: string;
+  /** ISO country code, e.g. LV. Used for VAT defaults and e-invoices. */
+  country: string;
   bankDetails: string;
   currency: string;
-  defaultTaxRate: number; // percent, e.g. 19
+  defaultTaxRate: number; // percent, e.g. 21
   paymentTermsDays: number;
   invoicePrefix: string;
   quotePrefix: string;
@@ -63,6 +65,10 @@ export interface Customer {
   email: string;
   phone: string;
   address: string;
+  /** ISO country code, e.g. LT. Empty means the same country as the business. */
+  country?: string;
+  /** VAT or company registration number, printed on invoices and e-invoices. */
+  taxId?: string;
   notes: string;
   createdAt: string;
 }

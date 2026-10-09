@@ -37,6 +37,7 @@ const api = vi.hoisted(() => ({
   allWorkspaces: vi.fn(async () => ({})),
   startMyBusiness: vi.fn(async (_name: string) => "f9"),
   accountRegister: vi.fn(async () => [] as unknown[]),
+  deleteMyAccount: vi.fn(async () => undefined),
 }));
 vi.mock("./api", async (orig) => ({ ...(await orig<typeof import("./api")>()), ...api }));
 
@@ -110,6 +111,35 @@ describe("client app sign-in", () => {
     expect(await screen.findByRole("heading", { name: "Maiznīca Saulīte", level: 1 })).toBeInTheDocument();
     expect(api.startMyBusiness).toHaveBeenCalledWith("  Maiznīca Saulīte ");
     expect(api.fetchWorkspace).toHaveBeenCalledWith("f9");
+  });
+
+  it("brings over what was entered while trying LegacyLift without an account", async () => {
+    signIn();
+    localStorage.setItem("legacylift.workspace.v1", JSON.stringify({ ...EMPTY_STATE, profile: { ...EMPTY_STATE.profile, businessName: "Maiznīca Saulīte" }, customers: [{ id: "c1", name: "Kafejnīca Kanēlis", company: "", email: "", phone: "", address: "", notes: "", createdAt: "2026-10-01" }] }));
+    api.fetchWorkspace.mockResolvedValue({ state: EMPTY_STATE, version: 1 });
+    renderAt("/app");
+    expect(await screen.findByLabelText(/bring over what i entered/i)).toBeChecked();
+    expect(screen.getByLabelText(/business name/i)).toHaveValue("Maiznīca Saulīte");
+    fireEvent.click(screen.getByRole("button", { name: /open my workspace/i }));
+    await act(async () => {});
+    const [firmId, saved, version] = api.saveWorkspace.mock.calls.at(-1) as unknown as [string, typeof EMPTY_STATE, number];
+    expect([firmId, version]).toEqual(["f9", 1]);
+    expect(saved.customers.map((c) => c.name)).toEqual(["Kafejnīca Kanēlis"]);
+    localStorage.removeItem("legacylift.workspace.v1");
+  });
+
+  it("lets a client delete their own account after typing their email", async () => {
+    signIn();
+    api.myWorkspaces.mockResolvedValueOnce([{ firmId: "f1", name: "Bäckerei Lindner" }]);
+    api.fetchWorkspace.mockResolvedValueOnce({ state: bakery, version: 1 });
+    renderAt("/app/settings");
+    fireEvent.click(await screen.findByRole("button", { name: /delete my account…/i }));
+    const confirm = screen.getByRole("button", { name: /delete my account permanently/i });
+    expect(confirm).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/type your email address/i), { target: { value: "MARIA@bakery.test " } });
+    fireEvent.click(confirm);
+    await act(async () => {});
+    expect(api.deleteMyAccount).toHaveBeenCalledTimes(1);
   });
 
   it("signs in with Google or Microsoft and comes back to the same page", async () => {

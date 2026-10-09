@@ -160,6 +160,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={api}>{children}</AuthContext.Provider>;
 }
 
+/** The signed-in account, or null when this page has no sign-in (trying LegacyLift without an account). */
+export function useOptionalAuth() {
+  return useContext(AuthContext);
+}
+
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside AuthProvider");

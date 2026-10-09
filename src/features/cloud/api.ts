@@ -88,6 +88,18 @@ export async function startMyBusiness(name: string): Promise<string> {
   return data as string;
 }
 
+/** Deletes the signed-in person's account (and businesses they set up alone). */
+export async function deleteMyAccount() {
+  const { error } = await supabase.rpc("delete_my_account");
+  if (error) throw new CloudError(error.message);
+}
+
+/** Staff: remove someone's account on request. */
+export async function removeAccount(userId: string) {
+  const { error } = await supabase.rpc("remove_account", { p_user: userId });
+  if (error) throw new CloudError(error.message);
+}
+
 export interface Account {
   userId: string;
   email: string;

@@ -123,6 +123,11 @@ describe("store", () => {
     expect(toCsv(["a", "b"], [["x,y", 'say "hi"']])).toBe('a,b\n"x,y","say ""hi"""');
     expect(recordsToCsv(state.records).split("\n")).toHaveLength(3);
   });
+
+  it("exports CSV the way Baltic Excel expects: semicolons and decimal commas", () => {
+    expect(toCsv(["Nosaukums", "Summa"], [["Rupjmaize; 500 g", 12.5], ["Kāpnes", 7200]], "lv")).toBe('Nosaukums;Summa\n"Rupjmaize; 500 g";12,5\nKāpnes;7200');
+    expect(toCsv(["Name", "Total"], [["Bread, rye", 12.5]], "en")).toBe('Name,Total\n"Bread, rye",12.5');
+  });
 });
 
 describe("demo fallbacks", () => {

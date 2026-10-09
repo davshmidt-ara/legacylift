@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound.tsx";
 import DigitalLanding from "./pages/digital/DigitalLanding.tsx";
 import DigitalApp from "./pages/digital/DigitalApp.tsx";
 import OpsApp from "./pages/digital/ops/OpsApp.tsx";
+import LegalPage from "./pages/legal/LegalPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,8 @@ const App = () => {
           <Route path="/" element={<DigitalLanding />} />
           <Route path="/app/*" element={<DigitalApp />} />
           <Route path="/internal/*" element={<OpsApp />} />
+          <Route path="/privacy" element={<LegalPage doc="privacy" />} />
+          <Route path="/terms" element={<LegalPage doc="terms" />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

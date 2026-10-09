@@ -38,6 +38,9 @@ In the project, open **SQL editor → New query**. Paste the whole of [`supabase
 1. `supabase/migrations/20260927120000_legacylift_cloud.sql`: clients, workspaces and who may see what.
 2. `supabase/migrations/20261009120000_accounts_and_sign_up.sql`: open sign-up, Google and Microsoft accounts, self-service business set-up, and the private account register.
 3. `supabase/migrations/20261009130000_founding_admin.sql`: founding admins.
+4. `supabase/migrations/20261010090000_delete_accounts.sql`: "Delete my account" for clients and "Remove account" for the team.
+
+**If you ran an earlier version of the setup file**, don't run it again. Run only the files in `supabase/setup/` named `update_…` that are newer than your setup. Each one is safe to run more than once.
 
 Then make yourself the admin with one more query. Use the address you will sign in with:
 
@@ -92,7 +95,16 @@ Supabase calls this provider **Azure**. It covers both work accounts (Microsoft 
 
 Until each provider is switched on, its button tells people "This sign-in option isn't switched on yet" and email sign-up still works.
 
-### f. Turn on the AI
+### f. Sign-in emails reach your clients (about 10 minutes)
+
+Supabase's built-in email service only sends to members of your own Supabase team. Clients who sign up with email and password need a real email service, or they never get the confirmation link. (Google and Microsoft sign-in don't send emails, so they work without this.)
+
+1. Create a free account at an email service, for example [Brevo](https://www.brevo.com) or [Resend](https://resend.com), and add your domain there if you have one.
+2. In that service, find its **SMTP** settings: host, port, user name and password (often called an SMTP key).
+3. In Supabase, go to **Authentication → Emails → SMTP Settings**. Turn on **Enable custom SMTP**, fill in those details, choose a sender such as `LegacyLift <hello@your-domain.lv>`, and save.
+4. Sign up once with a test address and check the confirmation email arrives.
+
+### g. Turn on the AI
 
 The AI runs in the `business-ai` function, which calls the Claude API. Get an API key at [console.anthropic.com](https://console.anthropic.com).
 
@@ -187,3 +199,12 @@ How the information stays confidential:
 - **Passwords** are handled by Supabase and never stored by LegacyLift. With Google or Microsoft, LegacyLift never sees a password at all.
 - **Search engines** are kept out of `/app` and `/internal`.
 - **Data location.** Pick an EU region for the Supabase project (step 1a) so client data stays in the EU.
+
+---
+
+## 5. Before taking on real clients
+
+- **Your company details:** fill in `src/config/company.ts` (legal name, registration number, address, privacy email, which country's law applies). They appear in the privacy policy (`/privacy`) and terms of use (`/terms`), which exist in all four languages. Until then those pages use a neutral wording.
+- **A legal check:** the privacy policy and terms are a sound starting point written for LegacyLift, but have a lawyer in your country read them once before you rely on them.
+- **Supabase plan:** projects on the free plan pause after about a week without visits. The Pro plan keeps the site always on and adds daily backups.
+- **E-invoices:** **E-invoice (XML)** on an invoice downloads a Peppol BIS 3.0 / EN 16931 file. It was checked with the official EN 16931 and Peppol validation rules (no errors). To send it over the Peppol network, upload it in your e-invoicing portal or accounting software. Both businesses need a VAT or registration number in LegacyLift (Settings, and the customer's page).

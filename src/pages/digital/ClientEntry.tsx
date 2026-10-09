@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { LogOut } from "lucide-react";
-import { myWorkspaces, startMyBusiness } from "@/features/cloud/api";
+import { fetchWorkspace, myWorkspaces, saveWorkspace, startMyBusiness } from "@/features/cloud/api";
 import { useAuth } from "@/features/cloud/auth";
 import { AuthFrame, AuthLoading, AuthScreen } from "@/features/cloud/AuthScreen";
 import { cloudPersistence } from "@/features/cloud/persistence";
 import { btnGhost, btnPrimary, fieldClass, labelClass } from "@/features/digital/components";
-import { useWorkspace } from "@/features/digital/store";
+import { loadWorkspace, useWorkspace } from "@/features/digital/store";
+import { SAMPLE_BUSINESS_NAME } from "@/features/digital/sample";
 import { WorkspaceShell } from "./WorkspaceShell";
 import { useT } from "@/i18n";
 
@@ -175,9 +176,19 @@ function SignedIn() {
   );
 }
 
+/** What someone entered while trying LegacyLift without an account, if anything. */
+function trialData() {
+  const ws = loadWorkspace();
+  const count = ws.customers.length + ws.invoices.length + ws.stock.length + ws.records.length;
+  return count ? ws : null;
+}
+
 function StartBusiness({ onDone }: { onDone: (firmId: string) => void }) {
   const t = useT();
-  const [name, setName] = useState("");
+  const [trial] = useState(trialData);
+  const [name, setName] = useState(() => (trial && trial.profile.businessName !== SAMPLE_BUSINESS_NAME ? trial.profile.businessName : ""));
+  // Bring the trial over by default, unless it is only the example business.
+  const [bringTrial, setBringTrial] = useState(() => Boolean(trial && trial.profile.businessName !== SAMPLE_BUSINESS_NAME));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   return (
@@ -188,7 +199,12 @@ function StartBusiness({ onDone }: { onDone: (firmId: string) => void }) {
         setBusy(true);
         setError(null);
         try {
-          onDone(await startMyBusiness(name));
+          const firmId = await startMyBusiness(name);
+          if (trial && bringTrial) {
+            const fresh = await fetchWorkspace(firmId);
+            await saveWorkspace(firmId, { ...trial, profile: { ...trial.profile, businessName: name.trim() } }, fresh.version);
+          }
+          onDone(firmId);
         } catch (err) {
           setError(err instanceof Error ? err.message : t("Something went wrong. Please try again."));
           setBusy(false);
@@ -199,6 +215,17 @@ function StartBusiness({ onDone }: { onDone: (firmId: string) => void }) {
         {t("Business name")}
         <input id="start-business-name" required maxLength={120} className={fieldClass} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("e.g. SIA Kalniņa Galdniecība")} />
       </label>
+      {trial && (
+        <label className="inline-flex items-start gap-2">
+          <input type="checkbox" id="bring-trial" className="mt-0.5 h-4 w-4 accent-[hsl(var(--primary))]" checked={bringTrial} onChange={(e) => setBringTrial(e.target.checked)} />
+          <span>
+            {t("Bring over what I entered while trying LegacyLift on this device ({customers} customers, {invoices} invoices and quotes).", {
+              customers: trial.customers.length,
+              invoices: trial.invoices.length,
+            })}
+          </span>
+        </label>
+      )}
       {error && (
         <p role="alert" className="text-destructive">
           {error}

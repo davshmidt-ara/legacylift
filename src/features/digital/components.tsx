@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { FlaskConical } from "lucide-react";
 import type { DisplayStatus, DocType } from "./types";
 import { locale, msg, useT } from "@/i18n";
+import { COUNTRIES, countryName } from "./countries";
 
 const focus =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
@@ -141,10 +142,27 @@ export function Money({ value, currency, className = "" }: { value: number | nul
 }
 
 export function download(name: string, content: string, type: string) {
-  const url = URL.createObjectURL(new Blob([content], { type }));
+  // Excel needs the byte-order mark to read ā, ų, õ… in CSV files correctly.
+  const url = URL.createObjectURL(new Blob(type === "text/csv" ? ["\ufeff", content] : [content], { type: type === "text/csv" ? "text/csv;charset=utf-8" : type }));
   const a = document.createElement("a");
   a.href = url;
   a.download = name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Country picker with names in the current language. `blankLabel` adds an empty first choice. */
+export function CountrySelect({ id, value, onChange, blankLabel }: { id: string; value: string; onChange: (code: string) => void; blankLabel?: string }) {
+  const known = COUNTRIES.some((c) => c.code === value);
+  return (
+    <select id={id} className={fieldClass} value={value} onChange={(e) => onChange(e.target.value)}>
+      {blankLabel !== undefined && <option value="">{blankLabel}</option>}
+      {value && !known && <option value={value}>{countryName(value)}</option>}
+      {COUNTRIES.map((c) => (
+        <option key={c.code} value={c.code}>
+          {countryName(c.code)}
+        </option>
+      ))}
+    </select>
+  );
 }

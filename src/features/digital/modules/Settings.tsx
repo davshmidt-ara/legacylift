@@ -3,7 +3,11 @@ import { Download, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { isWorkspaceBackup, migrate, useWorkspace } from "../store";
 import type { BusinessProfile, WorkspaceState } from "../types";
-import { PageHeader, Panel, btnDanger, btnGhost, btnPrimary, download, fieldClass, labelClass } from "../components";
+import { standardVat } from "../countries";
+import { CountrySelect, PageHeader, Panel, btnDanger, btnGhost, btnPrimary, download, fieldClass, labelClass, linkClass } from "../components";
+import { Link } from "react-router-dom";
+import { useOptionalAuth } from "@/features/cloud/auth";
+import { deleteMyAccount } from "@/features/cloud/api";
 import { LANGS, useLang, useT, type Lang } from "@/i18n";
 
 const CURRENCIES = ["EUR", "GBP", "USD", "CHF", "SEK", "NOK", "DKK", "PLN", "CZK", "AMD", "INR", "AUD", "CAD"];
@@ -76,9 +80,21 @@ const Settings = () => {
             {t("Address")}
             <textarea id="profile-address" rows={3} className={fieldClass} value={p.address} onChange={(e) => setP({ ...p, address: e.target.value })} />
           </label>
+          <label className={labelClass}>
+            {t("Country")}
+            <CountrySelect
+              id="profile-country"
+              value={p.country}
+              blankLabel={t("Choose a country…")}
+              onChange={(country) =>
+                // Follow the new country's standard VAT rate, unless a custom rate was set.
+                setP({ ...p, country, defaultTaxRate: p.defaultTaxRate === (standardVat(p.country) ?? p.defaultTaxRate) ? (standardVat(country) ?? p.defaultTaxRate) : p.defaultTaxRate })
+              }
+            />
+          </label>
+          {text("taxId", t("VAT / tax number"), { mono: true })}
           {text("email", t("Email"), { type: "email" })}
           {text("phone", t("Phone"), { type: "tel" })}
-          {text("taxId", t("VAT / tax number"), { mono: true })}
           {text("bankDetails", t("Bank details (printed on invoices)"), { wide: true, placeholder: t("Bank · IBAN · BIC") })}
         </Panel>
 
@@ -135,6 +151,8 @@ const Settings = () => {
           ))}
         </select>
       </Panel>
+
+      {online && <YourAccount />}
 
       <Panel className="mt-10 flex flex-col gap-4">
         <div>
@@ -259,5 +277,66 @@ const Settings = () => {
     </div>
   );
 };
+
+/** The signed-in client's own account: privacy links and deleting the account. Not shown to the team. */
+function YourAccount() {
+  const t = useT();
+  const auth = useOptionalAuth();
+  const [confirming, setConfirming] = useState(false);
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  if (!auth?.session || auth.staff) return null;
+  return (
+    <Panel className="mt-10 flex flex-col gap-3">
+      <h2 className="font-heading text-lg font-semibold">{t("Your account")}</h2>
+      <p className="text-sm text-muted-foreground">
+        {t("Signed in as {email}", { email: auth.email })} ·{" "}
+        <Link to="/privacy" className={linkClass}>
+          {t("Privacy policy")}
+        </Link>{" "}
+        ·{" "}
+        <Link to="/terms" className={linkClass}>
+          {t("Terms of use")}
+        </Link>
+      </p>
+      {confirming ? (
+        <div role="alert" className="rounded-md border border-destructive/50 bg-destructive/5 p-4 flex flex-col gap-3 text-sm">
+          <p>{t("This permanently deletes your account. A business you set up yourself is deleted with everything in it; a business your LegacyLift adviser set up stays with them. Download a backup first if you want to keep a copy.")}</p>
+          <label className={labelClass}>
+            {t("Type your email address to confirm")}
+            <input id="confirm-delete-account" className={`${fieldClass} max-w-sm`} value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={auth.email} />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={btnDanger}
+              disabled={busy || typed.trim().toLowerCase() !== auth.email.toLowerCase()}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await deleteMyAccount();
+                  toast.success(t("Your account has been deleted."));
+                  await auth.signOut();
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : t("Something went wrong. Please try again."));
+                  setBusy(false);
+                }
+              }}
+            >
+              {t("Delete my account permanently")}
+            </button>
+            <button type="button" className={btnGhost} onClick={() => setConfirming(false)}>
+              {t("Cancel")}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" className={`${btnGhost} self-start text-destructive`} onClick={() => setConfirming(true)}>
+          {t("Delete my account…")}
+        </button>
+      )}
+    </Panel>
+  );
+}
 
 export default Settings;

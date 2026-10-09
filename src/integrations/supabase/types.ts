@@ -227,6 +227,8 @@ export type Database = {
         }[]
       }
       start_my_business: { Args: { p_name: string }; Returns: string }
+      delete_my_account: { Args: Record<PropertyKey, never>; Returns: undefined }
+      remove_account: { Args: { p_user: string }; Returns: undefined }
       add_staff: { Args: { p_email: string; p_display_name?: string }; Returns: boolean }
       claim_invites: { Args: Record<PropertyKey, never>; Returns: number }
       confirmed_email: { Args: Record<PropertyKey, never>; Returns: string }

@@ -121,4 +121,38 @@ select pg_temp.check((select display_name from public.staff where user_id = :FOU
 select pg_temp.as_user(:MARIA); set role authenticated;
 select pg_temp.must_fail($$insert into internal.founding_admins values ('maria@bakery.test')$$, 'nobody can add themselves as a founding admin through the API');
 reset role;
+
+-- 9. deleting accounts
+\set LEAVER  '''00000000-0000-0000-0000-0000000000f7'''
+\set INVITED '''00000000-0000-0000-0000-0000000000f8'''
+insert into auth.users (id, email, email_confirmed_at) values (:LEAVER, 'leaver@shop.example', now()), (:INVITED, 'invited@shop.example', now());
+select pg_temp.as_user(:LEAVER); set role authenticated;
+select public.start_my_business('Leaver Shop') as leaver_firm \gset
+reset role;
+select pg_temp.as_user(:OWNER); set role authenticated;
+insert into public.firms (id, firm_name) values ('44444444-4444-4444-4444-444444444444', 'Team-made Firm');
+insert into public.firm_members (firm_id, user_id) values ('44444444-4444-4444-4444-444444444444', :INVITED);
+reset role;
+select pg_temp.as_user(:MARIA); set role authenticated;
+select pg_temp.must_fail($$select public.remove_account('00000000-0000-0000-0000-0000000000f7')$$, 'a client cannot remove someone else''s account');
+reset role;
+select pg_temp.as_user(''); set role anon;
+select pg_temp.must_fail($$select public.delete_my_account()$$, 'logged-out visitors cannot delete anything');
+reset role;
+select pg_temp.as_user(:LEAVER); set role authenticated;
+select public.delete_my_account();
+reset role;
+select pg_temp.check(not exists (select 1 from auth.users where id = :LEAVER), 'a client deletes their own account');
+select pg_temp.check(not exists (select 1 from internal.accounts where user_id = :LEAVER), 'and leaves the account register');
+select pg_temp.check(not exists (select 1 from public.firms where id = :'leaver_firm'), 'their self-made business and its workspace are deleted too');
+select pg_temp.check(not exists (select 1 from public.workspaces where firm_id = :'leaver_firm'), 'workspace gone');
+select pg_temp.as_user(:OWNER); set role authenticated;
+select pg_temp.must_fail($$select public.remove_account('00000000-0000-0000-0000-00000000000b')$$, 'the team cannot remove a team member this way');
+select public.remove_account(:INVITED);
+reset role;
+select pg_temp.check(not exists (select 1 from auth.users where id = :INVITED), 'the team removes an account on request');
+select pg_temp.check(exists (select 1 from public.firms where id = '44444444-4444-4444-4444-444444444444'), 'a business the team set up stays with the team');
+select pg_temp.as_user(:OWNER); set role authenticated;
+select pg_temp.must_fail($$select public.delete_my_account()$$, 'team members cannot delete themselves this way');
+reset role;
 \echo ALL ACCOUNT TESTS PASSED

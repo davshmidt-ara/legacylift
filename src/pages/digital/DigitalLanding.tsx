@@ -193,7 +193,15 @@ const DigitalLanding = () => {
         </section>
       </main>
 
-      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">{t("LegacyLift · Built for firms with history.")}</footer>
+      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground flex flex-wrap justify-center gap-x-4 gap-y-2">
+        <span>{t("LegacyLift · Built for firms with history.")}</span>
+        <Link to="/privacy" className="underline hover:text-foreground">
+          {t("Privacy policy")}
+        </Link>
+        <Link to="/terms" className="underline hover:text-foreground">
+          {t("Terms of use")}
+        </Link>
+      </footer>
     </div>
   );
 };

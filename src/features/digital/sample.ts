@@ -14,6 +14,7 @@ export function sampleProfile(): BusinessProfile {
     email: "info@kalnina-galdnieciba.example",
     phone: "+371 2000 0100",
     taxId: "LV40000000001",
+    country: "LV",
     bankDetails: "Swedbank · IBAN LV00 HABA 0000 0000 0000 0 · BIC HABALV22",
     currency: "EUR",
     defaultTaxRate: 21,
@@ -67,9 +68,9 @@ type SampleInvoice = Omit<Invoice, "id" | "createdAt" | "customerId" | "items"> 
 
 export function buildSampleData(newId: () => string, today = todayIso()) {
   const customers: Customer[] = [
-    { name: "Jānis Ozols", company: "SIA Ozols Būve", email: "janis@ozolsbuve.example", phone: "+371 2000 0142", address: "Rūpniecības iela 8, Rīga, LV-1045", notes: tr("General contractor. Sends 3–4 staircase jobs a year.") },
+    { name: "Jānis Ozols", company: "SIA Ozols Būve", email: "janis@ozolsbuve.example", phone: "+371 2000 0142", address: "Rūpniecības iela 8, Rīga, LV-1045", taxId: "LV40003000001", notes: tr("General contractor. Sends 3–4 staircase jobs a year.") },
     { name: "Anna Bērziņa", company: "", email: "anna.berzina@example.com", phone: "+371 2000 0192", address: "Liepu iela 12, Rīga, LV-1011", notes: tr("Customer since 1998. Prefers phone calls in the morning.") },
-    { name: "Mārtiņš Liepa", company: "Maiznīca Liepa", email: "info@maiznicaliepa.example", phone: "+371 2000 0177", address: "Tirgus laukums 3, Jūrmala, LV-2015", notes: tr("Shop fittings. Pays promptly.") },
+    { name: "Mārtiņš Liepa", company: "Maiznīca Liepa", email: "info@maiznicaliepa.example", phone: "+371 2000 0177", address: "Tirgus laukums 3, Jūrmala, LV-2015", taxId: "LV40103000002", notes: tr("Shop fittings. Pays promptly.") },
     { name: "Dr. Ilze Krūmiņa", company: "Krūmiņas zobārstniecība", email: "prakse@krumina.example", phone: "+371 2000 0133", address: "Brīvības iela 40, Rīga, LV-1050", notes: tr("Reception desk project, wants walnut.") },
   ].map((c, i) => ({ ...c, id: newId(), createdAt: addDays(today, -400 + i * 30) }));
 

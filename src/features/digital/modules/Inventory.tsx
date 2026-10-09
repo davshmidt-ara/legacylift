@@ -74,7 +74,7 @@ const Inventory = () => {
                 download(
                   "stock.csv",
                   toCsv(
-                    ["SKU", "Name", "Unit", "Quantity", "Reorder level", "Cost price", "Sale price", "Location"],
+                    [t("SKU / code"), t("Name"), t("Unit"), t("On hand"), t("Reorder at"), t("Cost price"), t("Sale price"), t("Location")],
                     state.stock.map((s) => [s.sku, s.name, s.unit, s.quantity, s.reorderLevel, s.costPrice, s.salePrice, s.location]),
                   ),
                   "text/csv",

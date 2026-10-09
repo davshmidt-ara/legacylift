@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useAuth, type OAuthProvider } from "./auth";
 import { btnGhost, btnPrimary, fieldClass, labelClass, linkClass } from "@/features/digital/components";
 import { useT } from "@/i18n";
@@ -192,7 +193,20 @@ export function AuthScreen({
             {mode === "signin" ? t("Sign in") : mode === "signup" ? t("Create account") : t("Send reset link")}
           </button>
         </form>
-        {mode === "signup" && <p className="text-xs text-muted-foreground">{t("Your account and business data are private: only you and your LegacyLift adviser can see them.")}</p>}
+        {mode === "signup" && (
+          <p className="text-xs text-muted-foreground">
+            {t("Your account and business data are private: only you and your LegacyLift adviser can see them.")}{" "}
+            {t("By creating an account you agree to the")}{" "}
+            <Link to="/terms" className={linkClass}>
+              {t("Terms of use")}
+            </Link>{" "}
+            {t("and the")}{" "}
+            <Link to="/privacy" className={linkClass}>
+              {t("Privacy policy")}
+            </Link>
+            .
+          </p>
+        )}
         {mode === "signin" && (
           <button type="button" className={`${linkClass} self-start text-sm`} onClick={() => setMode("reset")}>
             {t("Forgot your password?")}

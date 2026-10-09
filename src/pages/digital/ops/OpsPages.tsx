@@ -1042,6 +1042,9 @@ export function OpsAccounts() {
                 <th className="px-4 py-3 font-medium hidden md:table-cell">Signed up</th>
                 <th className="px-4 py-3 font-medium hidden lg:table-cell">Last sign-in</th>
                 <th className="px-4 py-3 font-medium">Business</th>
+                <th className="px-4 py-3">
+                  <span className="sr-only">Remove</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -1074,11 +1077,29 @@ export function OpsAccounts() {
                       <span className="text-muted-foreground">{a.isStaff ? "—" : "Not set up yet"}</span>
                     )}
                   </td>
+                  <td className="px-2 py-3 text-right">
+                    {!a.isStaff && (
+                      <ConfirmDelete
+                        label={`Remove the account of ${a.email}`}
+                        onConfirm={() =>
+                          cloud
+                            .removeAccount(a.userId)
+                            .then(() => {
+                              toast.success(`${a.email} removed. Businesses they set up alone were deleted with it.`);
+                              load();
+                            })
+                            .catch((err) => toast.error(err instanceof Error ? err.message : String(err)))
+                        }
+                      >
+                        <Trash2 size={16} aria-hidden="true" />
+                      </ConfirmDelete>
+                    )}
+                  </td>
                 </tr>
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
+                  <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
                     No accounts match.
                   </td>
                 </tr>

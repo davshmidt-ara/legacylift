@@ -44,6 +44,8 @@ Code lives in `src/features/digital/`, `src/features/ops/`, `src/features/cloud/
 
 - **Anyone can create an account** at `/app`: with Google, Microsoft or email and password. Someone who wasn't invited sets up their own business in one step; it appears in the console as a new lead marked *Website sign-up*.
 - **Clients** sign in at `/app` and their business opens. They can only ever see their own firm.
+- **E-invoices:** each invoice can be downloaded as a Peppol BIS 3.0 / EN 16931 e-invoice (validated against the official rules).
+- **Privacy:** privacy policy (`/privacy`) and terms (`/terms`) in all four languages; clients can download their data and delete their account in Settings, and the team can remove an account on request.
 - **Accounts** (console → Accounts) lists everyone who has signed up: how, when, last sign-in and their business. It reads a private register (`internal.accounts`) that only the team can see. Setup and privacy details: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) sections 1d–1e and 4.
 - **Our team** signs in at `/internal` and sees every client, the checklists and the activity log.
 - Data lives in Supabase, one workspace per firm. It saves automatically, and the sidebar says "All changes saved". If two people save at the same moment, their changes are combined item by item.

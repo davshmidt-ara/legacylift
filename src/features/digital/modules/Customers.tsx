@@ -8,6 +8,7 @@ import { useBase } from "../base";
 import type { Customer } from "../types";
 import {
   ConfirmDelete,
+  CountrySelect,
   EmptyState,
   Money,
   PageHeader,
@@ -31,7 +32,7 @@ function CustomerForm({ initial, onSave, submitLabel }: { initial: Omit<Customer
   const field = (key: keyof typeof c, label: string, type = "text") => (
     <label className={labelClass}>
       {label}
-      <input id={`cust-${key}`} type={type} className={fieldClass} value={c[key]} onChange={(e) => setC({ ...c, [key]: e.target.value })} />
+      <input id={`cust-${key}`} type={type} className={fieldClass} value={c[key] ?? ""} onChange={(e) => setC({ ...c, [key]: e.target.value })} />
     </label>
   );
   return (
@@ -54,6 +55,11 @@ function CustomerForm({ initial, onSave, submitLabel }: { initial: Omit<Customer
         {t("Address")}
         <textarea id="cust-address" rows={2} className={fieldClass} value={c.address} onChange={(e) => setC({ ...c, address: e.target.value })} />
       </label>
+      <label className={labelClass}>
+        {t("Country")}
+        <CountrySelect id="cust-country" value={c.country ?? ""} blankLabel={t("Same as my business")} onChange={(country) => setC({ ...c, country })} />
+      </label>
+      {field("taxId", t("VAT or registration number (optional)"))}
       <label className={`${labelClass} sm:col-span-2`}>
         {t("Notes")}
         <textarea id="cust-notes" rows={3} className={fieldClass} value={c.notes} placeholder={t("Preferences, history, who to ask for…")} onChange={(e) => setC({ ...c, notes: e.target.value })} />
@@ -99,7 +105,7 @@ function CustomerList() {
               onClick={() =>
                 download(
                   "customers.csv",
-                  toCsv(["Name", "Company", "Email", "Phone", "Address", "Notes"], state.customers.map((c) => [c.name, c.company, c.email, c.phone, c.address, c.notes])),
+                  toCsv([t("Contact name"), t("Company"), t("VAT or registration number"), t("Email"), t("Phone"), t("Address"), t("Country"), t("Notes")], state.customers.map((c) => [c.name, c.company, c.taxId ?? "", c.email, c.phone, c.address, c.country ?? "", c.notes])),
                   "text/csv",
                 )
               }
