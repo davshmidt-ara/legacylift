@@ -680,4 +680,8 @@ export const ET: Record<string, string> = {
   // Page not found
   "Oops! Page not found": "Oih! Lehte ei leitud",
   "Return to Home": "Tagasi avalehele",
+
+  // Default number prefixes for a new business
+  "INV": "ARVE",
+  "QUO": "PAK",
 };

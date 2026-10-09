@@ -1,6 +1,7 @@
 // Offline fallbacks used when the AI edge function is not reachable or not configured.
 // They are deliberately simple heuristics so the workspace stays usable in demo mode.
 import { customerName, displayStatus, invoiceTotals } from "./finance";
+import { formatDate, formatMoney } from "./components";
 import type { Assessment, DocType, ExtractedRecord, Roadmap, WorkspaceState } from "./types";
 import { locale, translate as tr } from "@/i18n";
 
@@ -165,9 +166,7 @@ export function demoRoadmap(a: Assessment): Roadmap {
   };
 }
 
-function money(n: number, cur: string) {
-  return `${n.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cur}`.trim();
-}
+const money = (n: number, cur: string) => formatMoney(n, cur);
 
 export function demoChat(question: string, state: WorkspaceState): string {
   const q = question.toLowerCase();
@@ -176,7 +175,7 @@ export function demoChat(question: string, state: WorkspaceState): string {
   if (!customers.length && !invoices.length && !records.length) {
     return tr("The workspace is empty. Add customers and invoices, digitize a few documents, or load the example business, and I can answer questions about them.");
   }
-  if (/(unpaid|overdue|owe|outstanding|open invoice|late|neapmaksāt|kavēt|parād|nesamaksāt|neapmokėt|skolin|vėluo|nesumokėt|tasumata|maksmata|võlg|hilin)/.test(q)) {
+  if (/(unpaid|overdue|owe|outstanding|open invoice|late|neapmaksāt|nav apmaksāt|nav samaksāt|kavēt|parād|nesamaksāt|neapmokėt|skolin|vėluo|nesumokėt|tasumata|maksmata|võlg|hilin)/.test(q)) {
     const open = invoices.filter((i) => i.kind === "invoice" && i.status === "sent");
     if (!open.length) return tr("Good news: there are no unpaid invoices.");
     const total = open.reduce((s, i) => s + invoiceTotals(i).total, 0);
@@ -186,7 +185,7 @@ export function demoChat(question: string, state: WorkspaceState): string {
           number: i.number,
           customer: customerName(customers, i.customerId),
           amount: money(invoiceTotals(i).total, cur),
-          due: i.dueDate,
+          due: formatDate(i.dueDate),
         }),
       )
       .join("\n");
@@ -199,7 +198,7 @@ export function demoChat(question: string, state: WorkspaceState): string {
       list: low.map((s) => tr("• {name}: {quantity} {unit} (reorder at {level})", { name: s.name, quantity: s.quantity.toLocaleString(locale()), unit: s.unit, level: s.reorderLevel.toLocaleString(locale()) })).join("\n"),
     });
   }
-  if (/(best|biggest|top|most).*(customer|client)|(customer|client).*(best|biggest|most)|labāk.*klient|lielāk.*klient|klient.*(labāk|lielāk|visvairāk)|geriausi.*klient|didžiausi.*klient|parim.*klient|suurim.*klient/.test(q)) {
+  if (/(best|biggest|top|most).*(customer|client)|(customer|client).*(best|biggest|most)|labāk.*klient|lielāk.*klient|klient.*(labāk|lielāk|visvairāk)|geriausi.*klient|didžiausi.*klient|parim.*klien|suurim.*klien/.test(q)) {
     const totals = customers
       .map((c) => ({ c, t: invoices.filter((i) => i.customerId === c.id && i.kind === "invoice" && i.status === "paid").reduce((s, i) => s + invoiceTotals(i).total, 0) }))
       .sort((a, b) => b.t - a.t)
@@ -217,16 +216,23 @@ export function demoChat(question: string, state: WorkspaceState): string {
   const rHits = records.filter((r) => hit(`${r.title} ${r.party} ${r.summary} ${r.tags.join(" ")}`));
   const lines = [
     ...cHits.slice(0, 3).map((c) => `• ${tr("Customer")}: ${c.company || c.name}${c.phone ? `, ${c.phone}` : ""}${c.notes ? ` — ${c.notes}` : ""}`),
-    ...iHits.slice(0, 5).map((i) => `• ${tr(i.kind === "quote" ? "Quote" : "Invoice")} ${i.number} (${i.issueDate}, ${tr(displayStatus(i))}): ${money(invoiceTotals(i).total, cur)}`),
+    ...iHits.slice(0, 5).map((i) => `• ${tr(i.kind === "quote" ? "Quote" : "Invoice")} ${i.number} (${formatDate(i.issueDate)}, ${tr(displayStatus(i))}): ${money(invoiceTotals(i).total, cur)}`),
     ...rHits.slice(0, 3).map((r) => `• ${tr("Document")}: ${r.title} — ${r.summary}`),
   ];
   if (lines.length) return tr("Here is what I found:\n{list}", { list: lines.join("\n") });
   return tr("I couldn't find anything matching that. (Demo mode uses simple keyword search. Connect the AI service for full answers.)");
 }
 
+/** Cuts text to at most `max` characters at a word boundary, adding “…” when shortened. */
+function shorten(text: string, max: number) {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), max / 2)).replace(/[\s,;:–—-]+$/, "")}…`;
+}
+
 export function demoDraft(kind: string, audience: string, tone: string, notes: string, businessName: string): string {
   const sign = businessName || tr("The team");
-  const subject = kind === "email" ? `${tr("Subject:")} ${notes.split(/\n|\.\s+(?=\p{Lu})/u)[0].slice(0, 60) || tr("A note from us")}\n\n` : "";
+  const subject = kind === "email" ? `${tr("Subject:")} ${shorten(notes.split(/\n|\.\s+(?=\p{Lu})/u)[0].trim(), 60) || tr("A note from us")}\n\n` : "";
   const greeting = tone === "formal" ? tr("Dear Sir or Madam,") : tr("Hello,");
   const close = tone === "formal" ? tr("Yours faithfully,") : tr("Kind regards,");
   const body = notes.trim() || tr("(Add what the message should say.)");

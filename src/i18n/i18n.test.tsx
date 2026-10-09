@@ -9,6 +9,9 @@ import { LV } from "./lv";
 import { LanguageProvider, translate } from "./index";
 import DigitalLanding from "@/pages/digital/DigitalLanding";
 import DigitalApp from "@/pages/digital/DigitalApp";
+import { demoChat } from "@/features/digital/demo";
+import { EMPTY_STATE, newId } from "@/features/digital/store";
+import { buildSampleData, SAMPLE_PROFILE } from "@/features/digital/sample";
 
 globalThis.ResizeObserver ??= class {
   observe() {}
@@ -123,5 +126,19 @@ describe("language switch", () => {
     expect(screen.getAllByText("PVN 21%").length).toBeGreaterThan(0);
     expect(screen.getByText(/ozolkoka kāpnes, 14 pakāpieni/i)).toBeInTheDocument();
     act(() => fireEvent.change(screen.getAllByRole("combobox", { name: /language/i })[0], { target: { value: "en" } }));
+  });
+});
+
+describe("assistant suggestions", () => {
+  const state = { ...EMPTY_STATE, profile: SAMPLE_PROFILE, ...buildSampleData(newId, "2026-09-26") };
+  const notFound = translate("I couldn't find anything matching that. (Demo mode uses simple keyword search. Connect the AI service for full answers.)");
+  const suggestions = ["Which invoices are still unpaid?", "Who are our best customers?", "What are we running low on?"];
+
+  it.each(["en", "lv", "lt", "et"] as const)("get a real answer in the demo, asked in %s", (lang) => {
+    for (const s of suggestions) {
+      const answer = demoChat(translate(s, undefined, lang), state);
+      expect(answer, translate(s, undefined, lang)).not.toBe(notFound);
+      expect(answer).toMatch(/•/);
+    }
   });
 });

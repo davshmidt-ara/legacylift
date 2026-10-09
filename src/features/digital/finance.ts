@@ -37,7 +37,7 @@ export function displayStatus(inv: Invoice, today = todayIso()): DisplayStatus {
 
 /** Next document number, e.g. RE-2026-0048. Continues from the highest existing number for the year. */
 export function nextNumber(invoices: Invoice[], kind: InvoiceKind, profile: BusinessProfile, today = todayIso()) {
-  const prefix = (kind === "invoice" ? profile.invoicePrefix : profile.quotePrefix) || (kind === "invoice" ? "INV" : "QUO");
+  const prefix = (kind === "invoice" ? profile.invoicePrefix : profile.quotePrefix) || translate(kind === "invoice" ? "INV" : "QUO");
   const year = today.slice(0, 4);
   const stem = `${prefix}-${year}-`;
   const max = invoices

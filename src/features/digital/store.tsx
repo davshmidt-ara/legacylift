@@ -32,6 +32,11 @@ export const EMPTY_PROFILE: BusinessProfile = {
   invoiceFooter: "",
 };
 
+/** A new business's profile, with invoice and quote number prefixes in the language it is set up in (e.g. RĒĶ / PIED in Latvian). */
+export function freshProfile(): BusinessProfile {
+  return { ...EMPTY_PROFILE, invoicePrefix: tr("INV"), quotePrefix: tr("QUO") };
+}
+
 export const EMPTY_STATE: WorkspaceState = {
   version: 2,
   profile: EMPTY_PROFILE,
@@ -61,7 +66,7 @@ export function isWorkspaceBackup(raw: unknown): boolean {
 /** Accepts anything previously saved (including v1, which had a top-level businessName); bad fields become empty. */
 export function migrate(raw: unknown): WorkspaceState {
   const data = obj(raw);
-  const profile = { ...EMPTY_PROFILE, ...(obj(data.profile) as Partial<BusinessProfile>) };
+  const profile = { ...freshProfile(), ...(obj(data.profile) as Partial<BusinessProfile>) };
   if (!profile.businessName && typeof data.businessName === "string") profile.businessName = data.businessName;
   return {
     version: 2,
@@ -80,9 +85,9 @@ export function migrate(raw: unknown): WorkspaceState {
 export function loadWorkspace(storageKey = STORAGE_KEY): WorkspaceState {
   try {
     const raw = localStorage.getItem(storageKey);
-    return raw ? migrate(JSON.parse(raw)) : EMPTY_STATE;
+    return migrate(raw ? JSON.parse(raw) : {});
   } catch {
-    return EMPTY_STATE;
+    return migrate({});
   }
 }
 
@@ -345,7 +350,7 @@ export function WorkspaceProvider({
     });
   }, []);
   const replaceAll = useCallback((next: WorkspaceState) => setState(migrate(next)), []);
-  const reset = useCallback(() => setState(EMPTY_STATE), []);
+  const reset = useCallback(() => setState(migrate({})), []);
 
   const api = useMemo(
     () => ({ state, sync, update, setProfile, upsert, patchItem, remove, loadSampleData, replaceAll, reset }),

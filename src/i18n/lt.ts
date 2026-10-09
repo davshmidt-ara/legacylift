@@ -680,4 +680,8 @@ export const LT: Record<string, string> = {
   // Page not found
   "Oops! Page not found": "Oi! Puslapis nerastas",
   "Return to Home": "Grįžti į pradžią",
+
+  // Default number prefixes for a new business
+  "INV": "SF",
+  "QUO": "PAS",
 };

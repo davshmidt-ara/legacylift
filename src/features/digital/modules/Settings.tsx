@@ -100,10 +100,10 @@ const Settings = () => {
             {t("Payment terms (days)")}
             <input id="profile-terms" type="number" min={0} className={`${fieldClass} font-mono`} value={p.paymentTermsDays} onChange={(e) => setP({ ...p, paymentTermsDays: Number(e.target.value) })} />
           </label>
-          {text("invoicePrefix", t("Invoice number prefix"), { mono: true, placeholder: "INV" })}
-          {text("quotePrefix", t("Quote number prefix"), { mono: true, placeholder: "QUO" })}
+          {text("invoicePrefix", t("Invoice number prefix"), { mono: true, placeholder: t("INV") })}
+          {text("quotePrefix", t("Quote number prefix"), { mono: true, placeholder: t("QUO") })}
           <p className="text-xs text-muted-foreground self-end pb-2">
-            {t("Next invoice:")} <span className="font-mono">{`${p.invoicePrefix || "INV"}-${new Date().getFullYear()}-0001`}</span>
+            {t("Next invoice:")} <span className="font-mono">{`${p.invoicePrefix || t("INV")}-${new Date().getFullYear()}-0001`}</span>
           </p>
           <label className={`${labelClass} sm:col-span-3`}>
             {t("Footer line on invoices")}

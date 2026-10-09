@@ -275,7 +275,7 @@ export const LV: Record<string, string> = {
   "The reminder couldn't be written. Please try again.": "Atgādinājumu neizdevās sagatavot. Lūdzu, mēģiniet vēlreiz.",
   "{kind} {number} from {business}": "{kind} {number} no {business}",
   "us": "mums",
-  "Dear {name},\n\nplease find our invoice {number} over {amount}, due on {due}.\n\nKind regards,\n{sender}": "Labdien, {name}!\n\nNosūtām mūsu rēķinu {number} par summu {amount}, apmaksas termiņš {due}.\n\nAr cieņu\n{sender}",
+  "Dear {name},\n\nplease find our invoice {number} over {amount}, due on {due}.\n\nKind regards,\n{sender}": "Labdien, {name}!\n\nNosūtām mūsu rēķinu {number} par summu {amount}.\nApmaksas termiņš: {due}\n\nAr cieņu\n{sender}",
   "Dear {name},\n\nplease find our quote {number} over {amount}.\n\nKind regards,\n{sender}": "Labdien, {name}!\n\nNosūtām mūsu piedāvājumu {number} par summu {amount}.\n\nAr cieņu\n{sender}",
   "All invoices & quotes": "Visi rēķini un piedāvājumi",
   "No customer": "Nav klienta",
@@ -680,4 +680,8 @@ export const LV: Record<string, string> = {
   // Page not found
   "Oops! Page not found": "Ak vai! Lapa nav atrasta",
   "Return to Home": "Atgriezties sākumlapā",
+
+  // Default number prefixes for a new business
+  "INV": "RĒĶ",
+  "QUO": "PIED",
 };
