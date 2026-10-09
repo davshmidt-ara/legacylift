@@ -35,6 +35,14 @@ const PACKAGES = [
   },
 ];
 
+/** The handwritten invoice in the hero, in each language. */
+const PAPER_SLIP: Record<string, string[]> = {
+  en: ["INVOICE No. 1047", "SIA Kalniņa Būve", "Oak staircase, 14 steps .... 7,200.–", "Fitting 18 hrs ............. 1,170.–", "Net total .................. 8,370.–"],
+  lv: ["RĒĶINS Nr. 1047", "SIA Kalniņa Būve", "Ozolkoka kāpnes, 14 pak. .... 7200,–", "Montāža 18 st. .............. 1170,–", "Kopā bez PVN ............... 8370,–"],
+  lt: ["SĄSKAITA Nr. 1047", "SIA Kalniņa Būve", "Ąžuoliniai laiptai, 14 pak. .. 7200,–", "Montavimas 18 val. .......... 1170,–", "Iš viso be PVM .............. 8370,–"],
+  et: ["ARVE nr 1047", "SIA Kalniņa Būve", "Tammetrepp, 14 astet ........ 7200,–", "Paigaldus 18 h .............. 1170,–", "Kokku km-ta ................. 8370,–"],
+};
+
 const DigitalLanding = () => {
   const t = useT();
   const { lang } = useLang();
@@ -61,7 +69,7 @@ const DigitalLanding = () => {
             <a href="#packages" className="hidden sm:inline hover:text-primary">
               {t("Packages")}
             </a>
-            <Link to="/app" className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+            <Link to="/app" className="hidden sm:inline font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
               {t("Open workspace")}
             </Link>
             <LanguageSwitch />
@@ -98,23 +106,11 @@ const DigitalLanding = () => {
           {/* Paper slip → digital record */}
           <div className="relative mx-auto w-full max-w-md" aria-label={t("Example: a handwritten invoice becomes a digital record")} role="img">
             <div className="rotate-[-4deg] rounded-sm border border-border bg-[hsl(var(--ll-paper))] p-5 shadow-md font-mono text-[13px] leading-6 text-[hsl(var(--ll-paper-ink))]">
-              {lang === "lv" ? (
-                <>
-                  <p className="font-semibold">RĒĶINS Nr. 1047</p>
-                  <p>SIA Kalniņa Būve</p>
-                  <p>Ozolkoka kāpnes, 14 pak. .... 7200,–</p>
-                  <p>Montāža 18 st. .............. 1170,–</p>
-                  <p className="border-t border-dashed border-current mt-1 pt-1">Kopā bez PVN ............... 8370,–</p>
-                </>
-              ) : (
-                <>
-                  <p className="font-semibold">INVOICE No. 1047</p>
-                  <p>SIA Kalniņa Būve</p>
-                  <p>Oak staircase, 14 steps .... 7,200.–</p>
-                  <p>Fitting 18 hrs ............. 1,170.–</p>
-                  <p className="border-t border-dashed border-current mt-1 pt-1">Net total .................. 8,370.–</p>
-                </>
-              )}
+              {(PAPER_SLIP[lang] ?? PAPER_SLIP.en).map((line, i) => (
+                <p key={i} className={i === 0 ? "font-semibold" : i === 4 ? "border-t border-dashed border-current mt-1 pt-1" : undefined}>
+                  {line}
+                </p>
+              ))}
             </div>
             <div className="relative -mt-3 ml-8 sm:ml-16 rounded-lg border border-border bg-card p-5 shadow-lg">
               <div className="flex items-center justify-between">

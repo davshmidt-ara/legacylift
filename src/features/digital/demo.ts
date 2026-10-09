@@ -5,13 +5,13 @@ import type { Assessment, DocType, ExtractedRecord, Roadmap, WorkspaceState } fr
 import { locale, translate as tr } from "@/i18n";
 
 const TYPE_HINTS: [DocType, RegExp][] = [
-  ["invoice", /\b(invoice|rechnung|facture|bill to|amount due)\b|rēķin|maksātājs/i],
-  ["receipt", /\b(receipt|quittung|paid|thank you for your purchase|kvīts)\b|čeks/i],
-  ["order", /\b(purchase order|order no|bestellung|p\.?o\.?\s*#?)\b|pasūtījum|pavadzīm/i],
-  ["contract", /\b(agreement|contract|vertrag|hereby|terms and conditions)\b|līgum/i],
-  ["inventory", /\b(stock|inventory|sku|on hand|lager|noliktava|atlikums)\b/i],
-  ["letter", /\b(dear|sehr geehrte|sincerely|regards|labdien|ar cieņu)\b|god\. /i],
-  ["customer", /\b(customer|client|kunde|phone|tel\.?|e-?mail|klients|tālr\.?)\b/i],
+  ["invoice", /\b(invoice|rechnung|facture|bill to|amount due)\b|rēķin|maksātājs|sąskait|arve|pirkėjas|maksja/i],
+  ["receipt", /\b(receipt|quittung|paid|thank you for your purchase|kvīts|kvitas|kviitung|tšekk)\b|čeks/i],
+  ["order", /\b(purchase order|order no|bestellung|p\.?o\.?\s*#?)\b|pasūtījum|pavadzīm|užsakym|važtaraš|tellimus|saateleht/i],
+  ["contract", /\b(agreement|contract|vertrag|hereby|terms and conditions)\b|līgum|sutart|leping/i],
+  ["inventory", /\b(stock|inventory|sku|on hand|lager|noliktava|atlikums|sandėlis|likutis|ladu|laoseis)\b/i],
+  ["letter", /\b(dear|sehr geehrte|sincerely|regards|labdien|ar cieņu|laba diena|pagarbiai|lugupidamisega)\b|god\. |tere/i],
+  ["customer", /\b(customer|client|kunde|phone|tel\.?|e-?mail|klients|tālr\.?|klientas|klient|telefon)\b/i],
 ];
 
 const CURRENCY_SIGNS: Record<string, string> = { "€": "EUR", $: "USD", "£": "GBP", "₹": "INR", "¥": "JPY" };
@@ -42,7 +42,7 @@ function findDate(text: string): string {
 function findTotal(text: string): { amount: number | null; currency: string } {
   const lines = text.split(/\n/);
   const moneyRe = /([€$£₹¥]|\b(?:EUR|USD|GBP|CHF|INR)\b)?\s*(-?\d[\d.,]*\d|\d)\s*([€$£₹¥]|\b(?:EUR|USD|GBP|CHF|INR)\b)?/;
-  const totalLine = [...lines].reverse().find((l) => /\b(total|summe|gesamt|amount due|balance|kopā|summa apmaksai|apmaksai)\b/i.test(l) && moneyRe.test(l));
+  const totalLine = [...lines].reverse().find((l) => /\b(total|summe|gesamt|amount due|balance|kopā|summa apmaksai|apmaksai|iš viso|mokėti|kokku|tasuda)\b/i.test(l) && moneyRe.test(l));
   const candidate = totalLine ?? lines.find((l) => /[€$£₹¥]|\b(EUR|USD|GBP|CHF|INR)\b/.test(l) && /\d/.test(l));
   if (!candidate) return { amount: null, currency: "" };
   const m = candidate.slice(candidate.search(/[€$£₹¥\d]|\b(EUR|USD|GBP|CHF|INR)\b/)).match(moneyRe);
@@ -57,10 +57,10 @@ export function demoExtract(text: string, fileName = ""): ExtractedRecord {
   const lines = clean.split(/\n/).map((l) => l.trim()).filter(Boolean);
   const fields: { label: string; value: string }[] = [];
   for (const l of lines) {
-    const kv = l.match(/^([A-Za-zÄÖÜäöüßĀāČčĒēĢģĪīĶķĻļŅņŠšŪūŽž .#/-]{2,30}):\s*(.+)$/);
+    const kv = l.match(/^([A-Za-zÄÖÜäöüßĀāČčĒēĢģĪīĶķĻļŅņŠšŪūŽžĄąĘęĖėĮįŲųÕõ .#/-]{2,30}):\s*(.+)$/);
     if (kv && fields.length < 12) fields.push({ label: kv[1].trim(), value: kv[2].trim() });
   }
-  const partyField = fields.find((f) => /(customer|client|to|kunde|supplier|from|name|company|klients|maksātājs|piegādātājs|uzņēmums|vārds)/i.test(f.label));
+  const partyField = fields.find((f) => /(customer|client|to|kunde|supplier|from|name|company|klients|maksātājs|piegādātājs|uzņēmums|vārds|klientas|pirkėjas|tiekėjas|įmonė|klient|maksja|tarnija|ettevõte|nimi)/i.test(f.label));
   const { amount, currency } = findTotal(clean);
   const title = lines[0]?.slice(0, 80) || fileName || tr("Untitled document");
   return {
@@ -78,10 +78,10 @@ export function demoExtract(text: string, fileName = ""): ExtractedRecord {
 }
 
 export function demoRoadmap(a: Assessment): Roadmap {
-  const digitalWords = /(software|app|cloud|excel|spreadsheet|online|digital|email|crm|erp|pos|website|shop|programm|lietotn|mākon|tabul|tiešsaist|digitāl|e-past|mājaslap|veikal)/i;
+  const digitalWords = /(software|app|cloud|excel|spreadsheet|online|digital|email|crm|erp|pos|website|shop|programm|lietotn|mākon|tabul|tiešsaist|digitāl|e-past|mājaslap|veikal|program|debes|lentel|internet|skaitmen|el\. pašt|svetain|parduotuv|tarkvar|rakendus|pilv|tabel|veeb|digi|e-post|pood)/i;
   const answers = [a.recordKeeping, a.invoicing, a.customerComms, a.inventory, a.onlinePresence];
   const digitalCount = answers.filter((x) => digitalWords.test(x)).length;
-  const paperCount = answers.filter((x) => /(paper|fax|ledger|notebook|binder|phone|none|nothing|handwritten|papīr|fakss|klade|burtnīc|mape|tālrun|nav|nekas|ar roku)/i.test(x)).length;
+  const paperCount = answers.filter((x) => /(paper|fax|ledger|notebook|binder|phone|none|nothing|handwritten|papīr|fakss|klade|burtnīc|mape|tālrun|nav|nekas|ar roku|popier|faks|sąsiuvin|segtuv|telefon|nėra|nieko|ranka|paber|kaust|vihik|pole|mitte midagi|käsitsi)/i.test(x)).length;
   const score = Math.max(5, Math.min(95, 20 + digitalCount * 14 - paperCount * 4));
 
   return {
@@ -176,7 +176,7 @@ export function demoChat(question: string, state: WorkspaceState): string {
   if (!customers.length && !invoices.length && !records.length) {
     return tr("The workspace is empty. Add customers and invoices, digitize a few documents, or load the example business, and I can answer questions about them.");
   }
-  if (/(unpaid|overdue|owe|outstanding|open invoice|late|neapmaksāt|kavēt|parād|nesamaksāt)/.test(q)) {
+  if (/(unpaid|overdue|owe|outstanding|open invoice|late|neapmaksāt|kavēt|parād|nesamaksāt|neapmokėt|skolin|vėluo|nesumokėt|tasumata|maksmata|võlg|hilin)/.test(q)) {
     const open = invoices.filter((i) => i.kind === "invoice" && i.status === "sent");
     if (!open.length) return tr("Good news: there are no unpaid invoices.");
     const total = open.reduce((s, i) => s + invoiceTotals(i).total, 0);
@@ -192,21 +192,21 @@ export function demoChat(question: string, state: WorkspaceState): string {
       .join("\n");
     return tr("Unpaid invoices: {n}, {amount} in total:\n{list}", { n: open.length, amount: money(total, cur), list });
   }
-  if (/(stock|reorder|material|low on|running out|noliktav|atlikum|beigsies|beidzas|materiāl|krājum)/.test(q)) {
+  if (/(stock|reorder|material|low on|running out|noliktav|atlikum|beigsies|beidzas|materiāl|krājum|sandėl|likut|pritrūk|atsarg|medžiag|lao|otsa|materjal|varu)/.test(q)) {
     const low = stock.filter((s) => s.quantity <= s.reorderLevel);
     if (!low.length) return tr("All stock items ({n}) are above their reorder level.", { n: stock.length });
     return tr("These items are at or below their reorder level:\n{list}", {
       list: low.map((s) => tr("• {name}: {quantity} {unit} (reorder at {level})", { name: s.name, quantity: s.quantity.toLocaleString(locale()), unit: s.unit, level: s.reorderLevel.toLocaleString(locale()) })).join("\n"),
     });
   }
-  if (/(best|biggest|top|most).*(customer|client)|(customer|client).*(best|biggest|most)|labāk.*klient|lielāk.*klient|klient.*(labāk|lielāk|visvairāk)/.test(q)) {
+  if (/(best|biggest|top|most).*(customer|client)|(customer|client).*(best|biggest|most)|labāk.*klient|lielāk.*klient|klient.*(labāk|lielāk|visvairāk)|geriausi.*klient|didžiausi.*klient|parim.*klient|suurim.*klient/.test(q)) {
     const totals = customers
       .map((c) => ({ c, t: invoices.filter((i) => i.customerId === c.id && i.kind === "invoice" && i.status === "paid").reduce((s, i) => s + invoiceTotals(i).total, 0) }))
       .sort((a, b) => b.t - a.t)
       .slice(0, 5);
     return tr("Customers by payments received:\n{list}", { list: totals.map(({ c, t }) => `• ${c.company || c.name}: ${money(t, cur)}`).join("\n") });
   }
-  if (/(revenue|turnover|total|how much|earned|sales|ieņēm|apgroz|cik daudz|nopelnīj|pārdošan)/.test(q)) {
+  if (/(revenue|turnover|total|how much|earned|sales|ieņēm|apgroz|cik daudz|nopelnīj|pārdošan|pajam|apyvart|kiek|uždirb|pardavim|tulu|käive|kui palju|teenisime|müük)/.test(q)) {
     const paid = invoices.filter((i) => i.kind === "invoice" && i.status === "paid");
     return tr("Paid invoices: {n}, {amount} in total.", { n: paid.length, amount: money(paid.reduce((s, i) => s + invoiceTotals(i).total, 0), cur) });
   }

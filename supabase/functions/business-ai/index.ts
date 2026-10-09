@@ -192,11 +192,17 @@ const LANGUAGE_RULES: Record<string, string> = {
   lv:
     "The person uses LegacyLift in Latvian. Write everything meant for people (titles, summaries, field labels, answers, plans and letters) in Latvian, " +
     "using polite forms (Jūs) and Latvian number and date formats. Keep names, numbers and quoted document text exactly as they appear.",
+  lt:
+    "The person uses LegacyLift in Lithuanian. Write everything meant for people (titles, summaries, field labels, answers, plans and letters) in Lithuanian, " +
+    "using polite forms (Jūs) and Lithuanian number and date formats. Keep names, numbers and quoted document text exactly as they appear.",
+  et:
+    "The person uses LegacyLift in Estonian. Write everything meant for people (titles, summaries, field labels, answers, plans and letters) in Estonian, " +
+    "using polite forms (Teie) and Estonian number and date formats. Keep names, numbers and quoted document text exactly as they appear.",
   en: "Write in English unless the person writes to you in another language.",
 };
 
 function buildRequest(body: Payload) {
-  const business = `${body.businessName ? `The firm is called "${body.businessName}". ` : ""}${body.language === "lv" ? LANGUAGE_RULES.lv : LANGUAGE_RULES.en}`;
+  const business = `${body.businessName ? `The firm is called "${body.businessName}". ` : ""}${LANGUAGE_RULES[["lv", "lt", "et"].includes(body.language ?? "") ? body.language! : "en"]}`;
 
   switch (body.task) {
     case "extract": {

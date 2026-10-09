@@ -15,7 +15,7 @@ Then open http://localhost:8080. The Supabase project it connects to is set in `
 
 ## What's in it
 
-Languages: **English and Latvian**. Everyone can switch with the EN | LV button (landing page, sign-in, workspace sidebar) or under *Settings → Language*; the choice is remembered on the device. Printed invoices and AI answers follow the chosen language. All texts live in `src/i18n/lv.ts`, and a test fails if a new text has no Latvian version.
+Languages: **English, Latvian, Lithuanian and Estonian**. Everyone can switch with the language menu (landing page, sign-in, workspace sidebar) or under *Settings → Language*; the choice is remembered on the device, and first-time visitors get their browser's language. Printed invoices and AI answers follow the chosen language. Translations live in `src/i18n/lv.ts`, `lt.ts` and `et.ts`; a test fails if a text is missing from any of them.
 
 A business app that helps established, paper-based firms go digital, with AI built in.
 

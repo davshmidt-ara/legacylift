@@ -1,25 +1,20 @@
-import { LANGS, useLang } from "./index";
+import { LANGS, useLang, type Lang } from "./index";
 
-/** EN | LV toggle. */
+/** Language menu: English, Latviešu, Lietuvių, Eesti. */
 export function LanguageSwitch({ className = "" }: { className?: string }) {
   const { lang, setLang } = useLang();
   return (
-    <div role="group" aria-label="Language / Valoda" className={`inline-flex rounded-md border border-border bg-card p-0.5 text-xs font-semibold ${className}`}>
+    <select
+      aria-label="Language · Valoda · Kalba · Keel"
+      value={lang}
+      onChange={(e) => setLang(e.target.value as Lang)}
+      className={`min-h-9 rounded-md border border-border bg-card px-2 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${className}`}
+    >
       {LANGS.map((l) => (
-        <button
-          key={l.id}
-          type="button"
-          lang={l.id}
-          title={l.name}
-          aria-pressed={lang === l.id}
-          onClick={() => setLang(l.id)}
-          className={`min-h-8 min-w-9 rounded px-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-            lang === l.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {l.label}
-        </button>
+        <option key={l.id} value={l.id} lang={l.id}>
+          {l.name}
+        </option>
       ))}
-    </div>
+    </select>
   );
 }
